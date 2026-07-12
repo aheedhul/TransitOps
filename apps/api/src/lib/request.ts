@@ -9,7 +9,7 @@ export function getParam(req: Request, name: string): string {
 export function getActor(req: Request) {
   const actor = req.actor;
   if (!actor) {
-    throw new Error('actor not set — ensure requireAuth middleware runs before this handler');
+    throw new Error('actor not set   ensure requireAuth middleware runs before this handler');
   }
   return actor;
 }

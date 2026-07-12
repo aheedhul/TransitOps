@@ -70,7 +70,7 @@ router.get('/intelligence/todays-report', requireAuth, requireCapability('report
 
     if (fleet.inMaintenance >= fleet.totalVehicles * 0.3) {
       topAlerts.push({
-        title: `High maintenance load — ${fleet.inMaintenance} of ${fleet.totalVehicles} vehicles in shop`,
+        title: `High maintenance load   ${fleet.inMaintenance} of ${fleet.totalVehicles} vehicles in shop`,
         message: '30%+ of fleet is in maintenance.',
         priority: 'orange',
       });

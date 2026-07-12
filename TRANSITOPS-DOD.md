@@ -1,4 +1,4 @@
-# TransitOps — Definition of Done Tracker
+# TransitOps   Definition of Done Tracker
 
 Tracked against `docs/15-AI-Build-Order-Phasing.md` §14 (project-level DoD).
 

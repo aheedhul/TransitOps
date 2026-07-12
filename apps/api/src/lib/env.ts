@@ -16,7 +16,7 @@ try {
     process.env[key] ??= value;
   }
 } catch {
-  // .env.local not found — fine in CI/production
+  // .env.local not found   fine in CI/production
 }
 
 const envSchema = z.object({

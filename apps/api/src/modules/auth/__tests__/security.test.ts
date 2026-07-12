@@ -137,7 +137,7 @@ describe('Refresh Token Family Revocation', () => {
   });
 
   it('should detect reuse of a revoked token and revoke the entire family', async () => {
-    // Reuse the OLD token — should trigger TOKEN_REUSE_DETECTED.
+    // Reuse the OLD token   should trigger TOKEN_REUSE_DETECTED.
     const reuseRes = await req()
       .post('/api/v1/auth/refresh')
       .send({ refreshToken: rawOld });
@@ -214,9 +214,9 @@ describe('Rate Limit on Login', () => {
 });
 
 // =============================================================================
-// 5. IDOR — Cross-Org Vehicle Access
+// 5. IDOR   Cross-Org Vehicle Access
 // =============================================================================
-describe('IDOR — Cross-Org Vehicle Access', () => {
+describe('IDOR   Cross-Org Vehicle Access', () => {
   let org1VehicleId: string;
   let org2Token: string;
 
@@ -258,9 +258,9 @@ describe('IDOR — Cross-Org Vehicle Access', () => {
 });
 
 // =============================================================================
-// 6. IDOR — Cross-Org Vehicle List
+// 6. IDOR   Cross-Org Vehicle List
 // =============================================================================
-describe('IDOR — Cross-Org Vehicle List', () => {
+describe('IDOR   Cross-Org Vehicle List', () => {
   let org2Token: string;
   let org2VehicleId: string;
 

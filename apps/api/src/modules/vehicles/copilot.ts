@@ -180,7 +180,7 @@ function buildRecommendation(
     return {
       action: 'schedule_urgent_maintenance',
       timing: 'this_week',
-      why: `Oil change due within ${Math.max(0, oilThreshold - kmSinceService)} km and high fuel anomalies detected — probable engine issue requiring immediate attention.`,
+      why: `Oil change due within ${Math.max(0, oilThreshold - kmSinceService)} km and high fuel anomalies detected   probable engine issue requiring immediate attention.`,
       confidence: 92,
     };
   }
@@ -198,7 +198,7 @@ function buildRecommendation(
     return {
       action: 'investigate_fuel_consumption',
       timing: 'this_week',
-      why: `High-severity fuel anomalies detected in last 30 days — investigate fuel quality or driver behaviour.`,
+      why: `High-severity fuel anomalies detected in last 30 days   investigate fuel quality or driver behaviour.`,
       confidence: 78,
     };
   }
@@ -207,7 +207,7 @@ function buildRecommendation(
     return {
       action: 'review_utilization',
       timing: 'this_month',
-      why: `Utilization at ${s.utilizationPct}% over last 30 days — vehicle may be under-deployed.`,
+      why: `Utilization at ${s.utilizationPct}% over last 30 days   vehicle may be under-deployed.`,
       confidence: 65,
     };
   }
@@ -217,7 +217,7 @@ function buildRecommendation(
     return {
       action: `address_${first.key}`,
       timing: 'this_week',
-      why: `${first.label} flagged as critical — ${first.context}.`,
+      why: `${first.label} flagged as critical   ${first.context}.`,
       confidence: 80,
     };
   }
@@ -226,7 +226,7 @@ function buildRecommendation(
     return {
       action: 'monitor_and_review',
       timing: 'this_fortnight',
-      why: `${warns.length} signal(s) flagged as warning — review at next fleet check-in.`,
+      why: `${warns.length} signal(s) flagged as warning   review at next fleet check-in.`,
       confidence: 60,
     };
   }

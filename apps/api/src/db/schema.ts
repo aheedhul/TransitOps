@@ -25,7 +25,7 @@ export const healthz = pgTable('healthz', {
 });
 
 // ============================================================
-// Phase 1 — Core platform tables
+// Phase 1   Core platform tables
 // ============================================================
 
 export const organizations = pgTable('organizations', {
@@ -326,7 +326,7 @@ export const vehicleDocuments = pgTable(
 );
 
 // ============================================================
-// Phase 3 — Maintenance
+// Phase 3   Maintenance
 // ============================================================
 
 export const maintenanceSchedules = pgTable(
@@ -388,7 +388,7 @@ export const maintenanceLogs = pgTable(
 );
 
 // ============================================================
-// Phase 3 — Fuel
+// Phase 3   Fuel
 // ============================================================
 
 export const fuelLogs = pgTable(
@@ -455,7 +455,7 @@ export const fuelAnomalyFlags = pgTable(
 );
 
 // ============================================================
-// Phase 3 — Expenses
+// Phase 3   Expenses
 // ============================================================
 
 export const expenses = pgTable(
@@ -487,7 +487,7 @@ export const expenses = pgTable(
 );
 
 // ============================================================
-// Phase 3 — Notifications
+// Phase 3   Notifications
 // ============================================================
 
 export const notifications = pgTable(
@@ -543,7 +543,7 @@ export const notificationRecipients = pgTable(
 );
 
 // ============================================================
-// Phase 4 — Offline Sync
+// Phase 4   Offline Sync
 // ============================================================
 
 export const syncIdempotency = pgTable(
@@ -568,7 +568,7 @@ export const syncIdempotency = pgTable(
 );
 
 // ============================================================
-// Phase 5 — Scoring & Health
+// Phase 5   Scoring & Health
 // ============================================================
 
 export const driverScoreHistory = pgTable(
@@ -621,7 +621,7 @@ export const vehicleHealthScores = pgTable(
 );
 
 // ============================================================
-// Phase 5 — Sustainability
+// Phase 5   Sustainability
 // ============================================================
 
 export const emissionsRecords = pgTable(
@@ -665,7 +665,7 @@ export const emissionsFactors = pgTable(
 );
 
 // ============================================================
-// Phase 6 — Telematics
+// Phase 6   Telematics
 // ============================================================
 
 export const vehicleLocations = pgTable(
@@ -748,7 +748,7 @@ export const geofenceEvents = pgTable(
 );
 
 // ============================================================
-// Phase 7 — Push Subscriptions
+// Phase 7   Push Subscriptions
 // ============================================================
 
 export const pushSubscriptions = pgTable(
@@ -772,7 +772,7 @@ export const pushSubscriptions = pgTable(
 );
 
 // ============================================================
-// Phase 5 — Settings
+// Phase 5   Settings
 // ============================================================
 
 export const settings = pgTable(

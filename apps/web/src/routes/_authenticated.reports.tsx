@@ -463,7 +463,7 @@ function ESGTab() {
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{v.trip_count}</td>
                   <td className="px-3 py-2.5 text-right font-mono text-xs">
-                    {v.distance_km > 0 ? Math.round((v.co2_kg / v.distance_km) * 1000) : '—'}
+                    {v.distance_km > 0 ? Math.round((v.co2_kg / v.distance_km) * 1000) : ' '}
                   </td>
                 </tr>
               ))}

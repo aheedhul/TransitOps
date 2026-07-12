@@ -124,7 +124,7 @@ export default function LoginPage() {
               </h1>
               <p className="mt-3 max-w-md text-sm text-sidebar-muted">
                 Real-time vehicle tracking, intelligent dispatch, fuel analytics, and maintenance
-                intelligence — all in one place.
+                intelligence   all in one place.
               </p>
             </div>
 

@@ -128,6 +128,6 @@ async function writeAudit(event: { id: string; actorId: string | null; organizat
       occurredAt: new Date(),
     });
   } catch {
-    // audit is best-effort — never fail the operation
+    // audit is best-effort   never fail the operation
   }
 }

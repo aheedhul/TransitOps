@@ -155,7 +155,7 @@ export function NewMaintenanceLogModal({
               <option value="">Select a vehicle</option>
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id} disabled={v.status === 'retired'}>
-                  {v.registrationNumber} — {v.name ?? v.id.slice(0, 8)} ({v.status})
+                  {v.registrationNumber}   {v.name ?? v.id.slice(0, 8)} ({v.status})
                 </option>
               ))}
             </Select>

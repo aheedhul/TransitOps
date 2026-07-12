@@ -173,7 +173,7 @@ export function NewFuelLogModal({ open, onOpenChange, onCreated }: NewFuelLogMod
               <option value="">Select a vehicle</option>
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.registrationNumber} — {v.name ?? v.id.slice(0, 8)} (odo {parseFloat(v.odometer).toLocaleString('en-IN')} km)
+                  {v.registrationNumber}   {v.name ?? v.id.slice(0, 8)} (odo {parseFloat(v.odometer).toLocaleString('en-IN')} km)
                 </option>
               ))}
             </Select>
@@ -210,7 +210,7 @@ export function NewFuelLogModal({ open, onOpenChange, onCreated }: NewFuelLogMod
               id="fl-pl"
               value={pricePerLiter > 0 ? `₹${pricePerLiter.toFixed(2)}` : ''}
               readOnly
-              placeholder="—"
+              placeholder=" "
             />
           </Field>
         </div>

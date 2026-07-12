@@ -318,7 +318,7 @@ export function TripDetail() {
               />
               <DetailItem
                 label="Customer"
-                value={trip.customerId ?? '—'}
+                value={trip.customerId ?? ' '}
                 icon={Building2}
                 monoValue
               />

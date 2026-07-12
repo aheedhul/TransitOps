@@ -140,7 +140,7 @@ export class TripService {
   }
 
   /**
-   * Dispatch a trip — server-authoritative transaction per docs/05 §7.
+   * Dispatch a trip   server-authoritative transaction per docs/05 §7.
    * Uses SELECT...FOR UPDATE for concurrency control.
    */
   async dispatch(
@@ -482,7 +482,7 @@ export class TripService {
       return {
         data: serializeTrip(trip),
         route: null,
-        warning: 'Maps service unavailable — route could not be computed',
+        warning: 'Maps service unavailable   route could not be computed',
       };
     }
   }
@@ -631,7 +631,7 @@ export class TripService {
             key: 'capacity_headroom',
             ok: true,
             weight: 0.9,
-            message: `${capacityHeadroom}% remaining capacity — safe load`,
+            message: `${capacityHeadroom}% remaining capacity   safe load`,
           },
           {
             key: 'driver_safety',
@@ -639,8 +639,8 @@ export class TripService {
             weight: 0.7,
             message:
               scores.driverSafety > 80
-                ? `Driver safety score ${scores.driverSafety} — good standing`
-                : `Driver safety score ${scores.driverSafety} — monitor closely`,
+                ? `Driver safety score ${scores.driverSafety}   good standing`
+                : `Driver safety score ${scores.driverSafety}   monitor closely`,
           },
           {
             key: 'nearest',

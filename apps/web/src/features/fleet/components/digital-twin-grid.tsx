@@ -80,7 +80,7 @@ export const DigitalTwinGrid: FC = () => {
             <a
               key={p.vehicleId}
               href="/vehicles"
-              title={`${p.vehicleName} — ${STATUS_LABELS[p.vehicleStatus] ?? p.vehicleStatus}`}
+              title={`${p.vehicleName}   ${STATUS_LABELS[p.vehicleStatus] ?? p.vehicleStatus}`}
               className={cn(
                 'group relative flex flex-col items-start justify-between overflow-hidden rounded-md border bg-card p-2 text-left shadow-soft transition-all',
                 'hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-elevated',

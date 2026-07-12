@@ -1,1 +1,1 @@
-console.log('TransitOps Simulator — placeholder');
+console.log('TransitOps Simulator   placeholder');

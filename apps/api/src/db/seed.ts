@@ -314,13 +314,13 @@ async function seed() {
     logger.info('seeding maintenance logs...');
     const maintData = [
       { vid: 0, type: 'oil_change', desc: 'Scheduled 5000km oil change', odo: 50000, cost: 8500, status: 'closed', closed: 90 },
-      { vid: 0, type: 'tyre', desc: 'Rear tyre replacement — abnormal wear', odo: 82000, cost: 24000, status: 'closed', closed: 45 },
+      { vid: 0, type: 'tyre', desc: 'Rear tyre replacement   abnormal wear', odo: 82000, cost: 24000, status: 'closed', closed: 45 },
       { vid: 1, type: 'service', desc: 'Quarterly preventive maintenance', odo: 60000, cost: 12000, status: 'closed', closed: 30 },
-      { vid: 3, type: 'repair', desc: 'Brake pad replacement — grinding noise', odo: 41000, cost: 8500, status: 'active', closed: 0 },
-      { vid: 4, type: 'inspection', desc: 'Pollution check — renewal due', odo: 30000, cost: 1500, status: 'closed', closed: 15 },
+      { vid: 3, type: 'repair', desc: 'Brake pad replacement   grinding noise', odo: 41000, cost: 8500, status: 'active', closed: 0 },
+      { vid: 4, type: 'inspection', desc: 'Pollution check   renewal due', odo: 30000, cost: 1500, status: 'closed', closed: 15 },
       { vid: 5, type: 'service', desc: '60K major service', odo: 55000, cost: 18500, status: 'closed', closed: 20 },
       { vid: 7, type: 'oil_change', desc: 'Oil change + filter replacement', odo: 95000, cost: 7500, status: 'closed', closed: 60 },
-      { vid: 9, type: 'repair', desc: 'AC compressor failure — cabin cooling', odo: 28000, cost: 32000, status: 'active', closed: 0 },
+      { vid: 9, type: 'repair', desc: 'AC compressor failure   cabin cooling', odo: 28000, cost: 32000, status: 'active', closed: 0 },
       { vid: 8, type: 'tyre', desc: 'Front tyre alignment + balancing', odo: 72000, cost: 3500, status: 'closed', closed: 10 },
       { vid: 6, type: 'inspection', desc: 'EV battery health check', odo: 15000, cost: 2000, status: 'closed', closed: 5 },
     ];

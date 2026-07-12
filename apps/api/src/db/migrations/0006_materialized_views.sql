@@ -1,4 +1,4 @@
--- MVP — Materialized Views for Phase 5 Reports
+-- MVP   Materialized Views for Phase 5 Reports
 
 -- 1. Fleet KPIs (updated every 60s by a cron job)
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_fleet_kpis AS

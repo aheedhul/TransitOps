@@ -128,7 +128,7 @@ function MaintenancePage() {
                 <TableCell>
                   <div className="flex items-center gap-1.5 text-xs">
                     <Building2 className="h-3 w-3 text-muted-foreground" />
-                    {m.vendor || '—'}
+                    {m.vendor || ' '}
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-semibold tabular-nums">

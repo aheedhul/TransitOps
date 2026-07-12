@@ -180,7 +180,7 @@ export function TripList() {
                         {new Date(trip.plannedDepartureAt).toLocaleDateString()}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground/60">—</span>
+                      <span className="text-xs text-muted-foreground/60"> </span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">

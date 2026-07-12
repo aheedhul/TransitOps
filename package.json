@@ -2,7 +2,7 @@
   "name": "transitops",
   "version": "0.0.0",
   "private": true,
-  "description": "TransitOps — Intelligent Fleet Operations ERP",
+  "description": "TransitOps   Intelligent Fleet Operations ERP",
   "scripts": {
     "dev": "pnpm --parallel -r run dev",
     "build": "pnpm -r run build",

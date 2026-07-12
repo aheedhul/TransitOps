@@ -14,7 +14,7 @@ export async function mutateOffline(config: OfflineMutationConfig): Promise<stri
     try {
       await config.optimisticApply();
     } catch {
-      // optimistic apply failed silently — network call will correct
+      // optimistic apply failed silently   network call will correct
     }
   }
 

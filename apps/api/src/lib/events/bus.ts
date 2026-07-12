@@ -30,7 +30,7 @@ export async function publish<T>(event: DomainEvent<T>): Promise<void> {
   const handlers = subscribers.get(event.topic) ?? [];
   const promises = handlers.map((handler) =>
     Promise.resolve(handler(event)).catch(() => {
-      // swallow subscriber errors — they must never break the publisher
+      // swallow subscriber errors   they must never break the publisher
     }),
   );
   await Promise.all(promises);

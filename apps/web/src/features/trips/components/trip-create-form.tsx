@@ -241,7 +241,7 @@ export function TripCreateForm() {
                     <option value="">Select a vehicle</option>
                     {availableVehicles.map((v) => (
                       <option key={v.id} value={v.id}>
-                        {v.registrationNumber} — {v.name ?? v.id.slice(0, 8)} (max {v.maxLoadCapacity} kg)
+                        {v.registrationNumber}   {v.name ?? v.id.slice(0, 8)} (max {v.maxLoadCapacity} kg)
                       </option>
                     ))}
                   </Select>
@@ -281,7 +281,7 @@ export function TripCreateForm() {
                     <option value="">Select a driver</option>
                     {availableDrivers.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.name} — license exp {d.licenseExpiryDate}
+                        {d.name}   license exp {d.licenseExpiryDate}
                       </option>
                     ))}
                   </Select>

@@ -1,4 +1,4 @@
--- Phase 6 — Telematics tables + materialized view
+-- Phase 6   Telematics tables + materialized view
 
 CREATE TABLE IF NOT EXISTS vehicle_locations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

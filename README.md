@@ -2,7 +2,7 @@
 
 **Hackathon Project | 8 Hours | 5-Persona Fleet ERP**
 
-> A centralized platform that digitizes vehicle management, driver assignment, trip dispatch, maintenance tracking, fuel logging, expense management, and operational analytics — replacing spreadsheets and manual logbooks.
+> A centralized platform that digitizes vehicle management, driver assignment, trip dispatch, maintenance tracking, fuel logging, expense management, and operational analytics   replacing spreadsheets and manual logbooks.
 
 ---
 
@@ -10,11 +10,11 @@
 
 ```powershell
 pnpm install
-cd apps/api && npx tsx src/main.ts    # Terminal 1 — API on :8080
-cd apps/web && npx vite                # Terminal 2 — Web on :5173
+cd apps/api && npx tsx src/main.ts    # Terminal 1   API on :8080
+cd apps/web && npx vite                # Terminal 2   Web on :5173
 ```
 
-Open **http://localhost:5173** — login with:
+Open **http://localhost:5173**   login with:
 
 | Role | Email | Password |
 |---|---|---|
@@ -24,7 +24,7 @@ Open **http://localhost:5173** — login with:
 | Safety Officer | `safety_officer@transitops.demo` | `Demo@123` |
 | Financial Analyst | `financial_analyst@transitops.demo` | `Demo@123` |
 
-**Each role sees only their authorized screens** — login as different users to test RBAC.
+**Each role sees only their authorized screens**   login as different users to test RBAC.
 
 ---
 
@@ -33,14 +33,14 @@ Open **http://localhost:5173** — login with:
 | Requirement | Status | Where |
 |---|---|---|
 | Authentication + RBAC | Done | JWT + Argon2id, 5 roles, capability middleware |
-| Dashboard with KPIs | Done | `/dashboard` — Active/Available/In-Shop/On-Trip vehicles, active trips, drivers, fleet status grid |
-| Vehicle Registry | Done | `/vehicles` — CRUD, unique registration, type/capacity/odometer/cost |
-| Driver Management | Done | `/drivers` — License number/expiry, safety score, status tracking |
-| Trip Management | Done | `/trips` — Draft→Dispatch→In-Transit→Complete/Cancel lifecycle |
+| Dashboard with KPIs | Done | `/dashboard`   Active/Available/In-Shop/On-Trip vehicles, active trips, drivers, fleet status grid |
+| Vehicle Registry | Done | `/vehicles`   CRUD, unique registration, type/capacity/odometer/cost |
+| Driver Management | Done | `/drivers`   License number/expiry, safety score, status tracking |
+| Trip Management | Done | `/trips`   Draft→Dispatch→In-Transit→Complete/Cancel lifecycle |
 | Trip Validation Rules | Done | Cannot dispatch with unavailable vehicle, expired license, overweight cargo, suspended driver |
-| Maintenance | Done | `/maintenance` — Create log auto-flips vehicle to In-Shop; close restores to Available |
-| Fuel & Expense | Done | `/fuel` — 30 logs with anomaly detection; expenses tracked |
-| Reports & Analytics | Done | `/reports` — 4 tabs (Fleet, Financial, ESG/CO2, Utilization) |
+| Maintenance | Done | `/maintenance`   Create log auto-flips vehicle to In-Shop; close restores to Available |
+| Fuel & Expense | Done | `/fuel`   30 logs with anomaly detection; expenses tracked |
+| Reports & Analytics | Done | `/reports`   4 tabs (Fleet, Financial, ESG/CO2, Utilization) |
 | CSV Export | Done | Per-report CSV download button |
 | Responsive UI | Done | Tailwind, mobile-friendly, light/dark mode |
 | Search, Filters, Sorting | Done | Cmd+K command palette, `/` universal search, report filters |
@@ -50,13 +50,13 @@ Open **http://localhost:5173** — login with:
 | Feature | Where |
 |---|---|
 | Dark mode | Toggle in sidebar header |
-| Real-time fleet map | `/map` — Leaflet with vehicle pins (colored by status) |
+| Real-time fleet map | `/map`   Leaflet with vehicle pins (colored by status) |
 | AI Copilot | `/vehicles` → Copilot card with deterministic recommendations |
 | Offline support | Dexie IndexedDB + service worker + sync engine |
 | Web push notifications | VAPID push subscription |
 | QR codes per vehicle | Vehicle detail → QR code download |
 | Keyboard shortcuts | Cmd+K, `/`, Ctrl+N, Esc |
-| Universal search | Vehicles/Drivers/Trips/Customers — 3-char min |
+| Universal search | Vehicles/Drivers/Trips/Customers   3-char min |
 | Digital twin grid | Dashboard → colored status squares for all vehicles |
 | Geofences | Depot/customer zones with breach detection |
 | ETA tracking | Live ETA computation with delay alerts |
@@ -93,16 +93,16 @@ fleet map, copilot, command palette, notification bell, dark mode
 |---|---|
 | Registration number unique per org | DB unique constraint |
 | Retired/In-Shop vehicles excluded from dispatch | `validateDispatch()` rules chain |
-| Expired license drivers cannot be assigned | Rules chain — `driver.license_valid` |
-| Suspended drivers blocked | Rules chain — `driver.not_suspended` |
-| Cargo weight ≤ vehicle capacity | Rules chain — `cargo.within_capacity` |
+| Expired license drivers cannot be assigned | Rules chain   `driver.license_valid` |
+| Suspended drivers blocked | Rules chain   `driver.not_suspended` |
+| Cargo weight ≤ vehicle capacity | Rules chain   `cargo.within_capacity` |
 | Dispatch flips vehicle+driver to On-Trip | Transactional service with events |
 | Complete trip restores to Available | `trip.complete` → status flip |
 | Cancel restores to Available | `trip.cancel` → status flip |
 | Maintenance auto-flips to In-Shop | `maintenance.create` → vehicle status update |
 | Close maintenance restores to Available | `maintenance.close` → vehicle status update |
 
-All rules are pure functions in `modules/<x>/rules.ts` — unit-testable.
+All rules are pure functions in `modules/<x>/rules.ts`   unit-testable.
 
 ---
 
@@ -129,7 +129,7 @@ All tables use UUID primary keys, soft deletes, `organization_id` for multi-tena
 6. **Fleet Map** → 11 vehicle dots across Bangalore
 7. **Audit Log** → Every action recorded with actor/entity/timestamp
 8. **Toggle dark mode** in sidebar header
-9. **Login as driver** → Only sees Dashboard, Vehicles, Trips — sidebar limited
+9. **Login as driver** → Only sees Dashboard, Vehicles, Trips   sidebar limited
 
 ---
 
@@ -165,6 +165,6 @@ transitops/
 
 ## 🔑 Environment
 
-Copy `.env.example` to `.env.local`. Required: `DATABASE_URL` (Supabase connection string). All other keys (LLM, Maps, Push) are optional — the system degrades gracefully without them.
+Copy `.env.example` to `.env.local`. Required: `DATABASE_URL` (Supabase connection string). All other keys (LLM, Maps, Push) are optional   the system degrades gracefully without them.
 
 ---

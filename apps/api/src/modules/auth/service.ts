@@ -87,7 +87,7 @@ export class AuthService {
 
     if (existing.revokedAt) {
       await this.repo.revokeTokenFamily(existing.familyId);
-      throw new AuthError('TOKEN_REUSE_DETECTED', 'Refresh token reuse detected — all sessions revoked');
+      throw new AuthError('TOKEN_REUSE_DETECTED', 'Refresh token reuse detected   all sessions revoked');
     }
 
     if (existing.expiresAt < new Date()) {

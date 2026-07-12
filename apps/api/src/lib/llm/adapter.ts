@@ -233,7 +233,7 @@ export function buildTemplatedCopilotProse(prompt: CopilotPrompt): string {
 
   if (goods.length > 0) {
     const goodMsgs = goods.map((s) => `${s.label} ${s.value}${s.unit} (${s.context || 'on track'})`);
-    lines.push(`In good standing — ${goodMsgs.join('; ')}.`);
+    lines.push(`In good standing   ${goodMsgs.join('; ')}.`);
   }
 
   if (warns.length > 0) {
@@ -242,7 +242,7 @@ export function buildTemplatedCopilotProse(prompt: CopilotPrompt): string {
   }
 
   lines.push(
-    `Recommendation: ${prompt.recommendation.action} — ${prompt.recommendation.why} (confidence: ${prompt.recommendation.confidence}%).`,
+    `Recommendation: ${prompt.recommendation.action}   ${prompt.recommendation.why} (confidence: ${prompt.recommendation.confidence}%).`,
   );
 
   return lines.join(' ');
