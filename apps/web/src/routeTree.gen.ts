@@ -10,6 +10,8 @@ import { Route as AuthenticatedTripsImport } from './routes/_authenticated.trips
 import { Route as AuthenticatedTripsNewImport } from './routes/_authenticated.trips.new.js'
 import { Route as AuthenticatedTripsIdImport } from './routes/_authenticated.trips.$id.js'
 import { Route as AuthenticatedMaintenanceImport } from './routes/_authenticated.maintenance.js'
+import { Route as AuthenticatedNotificationsImport } from './routes/_authenticated.notifications.js'
+import { Route as AuthenticatedAuditLogsImport } from './routes/_authenticated.audit-logs.js'
 import { Route as LoginImport } from './routes/login.js'
 import { Route as IndexImport } from './routes/index.js'
 
@@ -55,6 +57,18 @@ const AuthenticatedMaintenanceRoute = AuthenticatedMaintenanceImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
+const AuthenticatedNotificationsRoute = AuthenticatedNotificationsImport.update({
+  id: '/_authenticated/notifications',
+  path: '/notifications',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
+const AuthenticatedAuditLogsRoute = AuthenticatedAuditLogsImport.update({
+  id: '/_authenticated/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
 const AuthenticatedRoute = AuthenticatedImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRoute,
@@ -84,6 +98,8 @@ declare module '@tanstack/react-router' {
     '/_authenticated/trips/new': { id: '/_authenticated/trips/new'; path: '/trips/new'; fullPath: '/trips/new'; preLoaderRoute: typeof AuthenticatedTripsNewImport; parentRoute: typeof AuthenticatedTripsImport }
     '/_authenticated/trips/$id': { id: '/_authenticated/trips/$id'; path: '/trips/$id'; fullPath: '/trips/$id'; preLoaderRoute: typeof AuthenticatedTripsIdImport; parentRoute: typeof AuthenticatedTripsImport }
     '/_authenticated/maintenance': { id: '/_authenticated/maintenance'; path: '/maintenance'; fullPath: '/maintenance'; preLoaderRoute: typeof AuthenticatedMaintenanceImport; parentRoute: typeof AuthenticatedImport }
+    '/_authenticated/notifications': { id: '/_authenticated/notifications'; path: '/notifications'; fullPath: '/notifications'; preLoaderRoute: typeof AuthenticatedNotificationsImport; parentRoute: typeof AuthenticatedImport }
+    '/_authenticated/audit-logs': { id: '/_authenticated/audit-logs'; path: '/audit-logs'; fullPath: '/audit-logs'; preLoaderRoute: typeof AuthenticatedAuditLogsImport; parentRoute: typeof AuthenticatedImport }
   }
 }
 
@@ -99,6 +115,8 @@ export const routeTree = rootRoute.addChildren({
       AuthenticatedTripsIdRoute,
     }),
     AuthenticatedMaintenanceRoute,
+    AuthenticatedNotificationsRoute,
+    AuthenticatedAuditLogsRoute,
   }),
 })
 

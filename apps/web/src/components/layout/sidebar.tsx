@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'nav.users', path: '/users', roles: ['admin'] },
   { label: 'nav.settings', path: '/settings', roles: ['admin'] },
   { label: 'nav.auditLog', path: '/audit-logs', roles: ['admin'] },
+  { label: 'nav.notifications', path: '/notifications', roles: ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'] },
 ];
 
 export function Sidebar() {
