@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Sparkles, Lightbulb, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../auth/store.js';
-import clsx from 'clsx';
+import { Card } from '../../../components/ui/card.js';
+import { Spinner } from '../../../components/ui/spinner.js';
+import { Button } from '../../../components/ui/button.js';
+import { cn } from '../../../lib/utils.js';
 
 interface CopilotSignal {
   key: string;
@@ -47,23 +51,23 @@ async function fetchCopilot(vehicleId: string, useLLM = false): Promise<CopilotD
   return json.data;
 }
 
-function scoreColor(score: string) {
-  switch (score) {
-    case 'good': return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-950/30';
-    case 'warn': return 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-950/30';
-    case 'critical': return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/30';
-    default: return 'text-muted-foreground bg-muted';
-  }
-}
-
-function scoreIcon(score: string) {
-  switch (score) {
-    case 'good': return '\u2713';
-    case 'warn': return '\u26A1';
-    case 'critical': return '\u2715';
-    default: return '\u2014';
-  }
-}
+const SCORE_CONFIG: Record<string, { Icon: typeof CheckCircle2; className: string; label: string }> = {
+  good: {
+    Icon: CheckCircle2,
+    className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-emerald-500/20',
+    label: 'Good',
+  },
+  warn: {
+    Icon: AlertTriangle,
+    className: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 ring-amber-500/20',
+    label: 'Warning',
+  },
+  critical: {
+    Icon: AlertTriangle,
+    className: 'bg-red-500/10 text-red-700 dark:text-red-300 ring-red-500/20',
+    label: 'Critical',
+  },
+};
 
 export function CopilotCard({ vehicleId }: { vehicleId: string }) {
   const { t } = useTranslation();
@@ -91,95 +95,146 @@ export function CopilotCard({ vehicleId }: { vehicleId: string }) {
 
   if (loading) {
     return (
-      <div className="rounded-lg border bg-card p-6 animate-pulse">
-        <div className="h-5 w-48 rounded bg-muted" />
-        <div className="mt-3 h-4 w-full rounded bg-muted" />
-        <div className="mt-2 h-4 w-3/4 rounded bg-muted" />
-      </div>
+      <Card className="p-6">
+        <div className="flex items-center gap-3">
+          <Spinner />
+          <div className="space-y-1.5">
+            <div className="h-4 w-40 rounded bg-muted skeleton" />
+            <div className="h-3 w-56 rounded bg-muted skeleton" />
+          </div>
+        </div>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg border bg-card p-6">
-        <div className="text-sm text-red-500">{t('copilot.error', { error })}</div>
-      </div>
+      <Card className="p-6">
+        <p className="text-sm text-destructive">{t('copilot.error', { error })}</p>
+      </Card>
     );
   }
 
   if (!data) {
     return (
-      <div className="rounded-lg border bg-card p-6">
-        <div className="text-sm text-muted-foreground">{t('copilot.noData')}</div>
-      </div>
+      <Card className="p-6 text-center">
+        <Sparkles className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">{t('copilot.noData')}</p>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-card p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">{data.headline}</h3>
-        <span className="text-xs text-muted-foreground">{t('copilot.title')}</span>
-      </div>
-
-      <div className="mb-4 text-sm leading-relaxed text-foreground">
-        {data.prose}
-      </div>
-
-      <div className="mb-4 space-y-2">
-        {data.signals.map((signal) => (
-          <div key={signal.key} className="flex items-center justify-between rounded-md border px-3 py-2">
-            <div>
-              <div className="text-sm font-medium">{signal.label}</div>
-              <div className="text-xs text-muted-foreground">{signal.context}</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold tabular-nums">
-                {signal.value}{signal.unit && ` ${signal.unit}`}
-              </span>
-              <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', scoreColor(signal.score))}>
-                {scoreIcon(signal.score)} {signal.score}
-              </span>
-            </div>
+    <Card className="overflow-hidden">
+      <div className="flex items-center justify-between border-b bg-gradient-to-br from-primary/5 via-primary/5 to-transparent px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 text-primary">
+            <Sparkles className="h-4 w-4" />
           </div>
-        ))}
-      </div>
-
-      <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
-        <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold">
-              {data.recommendation.action.replace(/_/g, ' ')}
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Timing: {data.recommendation.timing.replace(/_/g, ' ')} &middot; Confidence: {data.recommendation.confidence}%
-            </div>
+            <h3 className="text-sm font-semibold text-foreground">{data.headline}</h3>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              {t('copilot.title')}
+            </p>
           </div>
-          <button
-            onClick={() => setShowWhy(!showWhy)}
-            className="text-xs font-medium text-primary hover:underline"
-          >
-            {showWhy ? t('copilot.hideTrace') : t('copilot.showWhy')}
-          </button>
+        </div>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-inset ring-primary/20">
+          AI
+        </span>
+      </div>
+
+      <div className="space-y-4 p-5">
+        <p className="text-sm leading-relaxed text-foreground/90">{data.prose}</p>
+
+        <div className="space-y-2">
+          {data.signals.map((signal) => {
+            const config = SCORE_CONFIG[signal.score] ?? SCORE_CONFIG.good!;
+            const Icon = config.Icon;
+            return (
+              <div
+                key={signal.key}
+                className="flex items-center justify-between rounded-md border bg-background p-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">{signal.label}</p>
+                  <p className="truncate text-xs text-muted-foreground">{signal.context}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold tabular-nums">
+                    {signal.value}
+                    {signal.unit && ` ${signal.unit}`}
+                  </span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset',
+                      config.className,
+                    )}
+                  >
+                    <Icon className="h-2.5 w-2.5" />
+                    {config.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {showWhy && (
-          <div className="mt-3 rounded-md bg-background p-3 text-xs text-muted-foreground space-y-1">
-            <div className="font-medium text-foreground">{t('copilot.whyRecommendation')}</div>
-            <div>{data.recommendation.why}</div>
-            <div className="mt-2 pt-2 border-t">
-              <span className="font-medium">{t('copilot.signalsTrace')} </span>
-              {Object.entries(data.sources).filter(([_, v]) => (Array.isArray(v) ? v.length > 0 : !!v)).length > 0
-                ? [
-                    data.sources.vehicleHealthScoreId && `Health score #${data.sources.vehicleHealthScoreId.slice(0, 8)}`,
-                    data.sources.maintenanceScheduleIds.length > 0 && `${data.sources.maintenanceScheduleIds.length} maintenance schedule(s)`,
-                    data.sources.anomalyIds.length > 0 && `${data.sources.anomalyIds.length} fuel anomaly(s)`,
-                  ].filter(Boolean).join(' \u00B7 ')
-                : t('copilot.noSourceData')}
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <Lightbulb className="h-3.5 w-3.5 text-primary" />
+                <p className="text-sm font-semibold text-foreground capitalize">
+                  {data.recommendation.action.replace(/_/g, ' ')}
+                </p>
+              </div>
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                <span>Timing:</span>
+                <span className="font-medium capitalize text-foreground">
+                  {data.recommendation.timing.replace(/_/g, ' ')}
+                </span>
+                <span>·</span>
+                <TrendingUp className="h-3 w-3" />
+                <span className="font-medium text-foreground">
+                  {data.recommendation.confidence}% confidence
+                </span>
+              </p>
             </div>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => setShowWhy(!showWhy)}
+            >
+              {showWhy ? t('copilot.hideTrace') : t('copilot.showWhy')}
+            </Button>
           </div>
-        )}
+
+          {showWhy && (
+            <div className="mt-3 space-y-2 rounded-md border bg-background p-3 text-xs text-muted-foreground animate-fade-in">
+              <div>
+                <p className="font-semibold text-foreground">{t('copilot.whyRecommendation')}</p>
+                <p className="mt-1">{data.recommendation.why}</p>
+              </div>
+              <div className="border-t pt-2">
+                <p className="font-semibold text-foreground">{t('copilot.signalsTrace')}</p>
+                <p className="mt-1">
+                  {data.sources.vehicleHealthScoreId && (
+                    <>Health score #{data.sources.vehicleHealthScoreId.slice(0, 8)} · </>
+                  )}
+                  {data.sources.maintenanceScheduleIds.length > 0 &&
+                    `${data.sources.maintenanceScheduleIds.length} maintenance schedule(s) · `}
+                  {data.sources.anomalyIds.length > 0 &&
+                    `${data.sources.anomalyIds.length} fuel anomaly(s)`}
+                  {!data.sources.vehicleHealthScoreId &&
+                    data.sources.maintenanceScheduleIds.length === 0 &&
+                    data.sources.anomalyIds.length === 0 &&
+                    t('copilot.noSourceData')}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }
