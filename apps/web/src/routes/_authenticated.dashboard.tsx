@@ -1,8 +1,33 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
+import {
+  Truck,
+  CheckCircle2,
+  Wrench,
+  Route as RouteIcon,
+  Activity,
+  Clock,
+  UserCheck,
+  Gauge,
+  Plus,
+  BarChart3,
+  MapPin,
+  ArrowRight,
+  TrendingUp,
+  Sparkles,
+  Fuel,
+  type LucideIcon,
+} from 'lucide-react';
 import { DigitalTwinGrid } from '../features/fleet/index.js';
 import { useAuthStore } from '../features/auth/store.js';
+import { PageHeader } from '../components/ui/empty-state.js';
+import { Button } from '../components/ui/button.js';
+import { StatCard, StatSkeleton } from '../components/ui/stat-card.js';
+import { Section } from '../components/ui/card.js';
+import { StatusDot } from '../components/ui/status-pill.js';
+import { Skeleton } from '../components/ui/skeleton.js';
+import { ProgressBar } from '../components/ui/utilities.js';
+import { cn } from '../lib/utils.js';
 
 interface FleetKPIs {
   as_of: string;
@@ -33,7 +58,6 @@ export const Route = createFileRoute('/_authenticated/dashboard')({
 });
 
 function DashboardPage() {
-  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const [kpis, setKpis] = useState<FleetKPIs | null>(null);
   const [vehicles, setVehicles] = useState<VehicleSnippet[]>([]);
@@ -63,209 +87,384 @@ function DashboardPage() {
     kpis && kpis.total_vehicles > 0
       ? Math.round(((kpis.on_trip + kpis.in_maintenance) / kpis.total_vehicles) * 100)
       : 0;
+  const availablePct =
+    kpis && kpis.total_vehicles > 0
+      ? Math.round((kpis.available_vehicles / kpis.total_vehicles) * 100)
+      : 0;
+  const firstName = session?.name?.split(' ')[0] ?? 'there';
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('dashboard.commandCenter')}</h1>
-          <p className="text-sm text-muted-foreground">
-            Live overview of fleet, trips, drivers, and operational costs.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            to="/trips/new"
-            className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
-          >
-            + New Trip
-          </Link>
-          <Link
-            to="/reports"
-            className="inline-flex items-center rounded-md border bg-card px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent"
-          >
-            Reports
-          </Link>
-        </div>
-      </div>
+    <div className="space-y-6 sm:space-y-8">
+      <PageHeader
+        eyebrow={
+          <span className="inline-flex items-center gap-1.5 text-primary">
+            <Sparkles className="h-3 w-3" />
+            Command Center
+          </span>
+        }
+        title={`Welcome back, ${firstName}`}
+        description="Live overview of your fleet, trips, drivers, and operational costs."
+        actions={
+          <>
+            <Button variant="outline" leftIcon={<BarChart3 className="h-3.5 w-3.5" />}>
+              <Link to="/reports">View reports</Link>
+            </Button>
+            <Button leftIcon={<Plus className="h-3.5 w-3.5" />}>
+              <Link to="/trips/new">New Trip</Link>
+            </Button>
+          </>
+        }
+      />
 
+      {/* KPI Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <KpiCard label="Total Vehicles" value={kpis?.total_vehicles ?? '-'} icon="truck" color="from-blue-500 to-cyan-400" />
-        <KpiCard label="Available" value={kpis?.available_vehicles ?? '-'} icon="check" color="from-emerald-500 to-green-400" />
-        <KpiCard label="In Maintenance" value={kpis?.in_maintenance ?? '-'} icon="wrench" color="from-amber-500 to-yellow-400" />
-        <KpiCard label="On Trip" value={kpis?.on_trip ?? '-'} icon="route" color="from-indigo-500 to-violet-400" />
-        <KpiCard label="Active Trips" value={kpis?.active_trips ?? '-'} icon="activity" color="from-rose-500 to-pink-400" />
-        <KpiCard label="Pending Trips" value={kpis?.pending_trips ?? '-'} icon="clock" color="from-orange-500 to-amber-400" />
-        <KpiCard label="Drivers On Duty" value={kpis?.drivers_on_duty ?? '-'} icon="user" color="from-cyan-500 to-sky-400" />
-        <KpiCard label="Fleet Utilization" value={loading ? '-' : `${utilizationPct}%`} icon="gauge" color="from-purple-500 to-fuchsia-400" />
+        {loading ? (
+          <>
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+          </>
+        ) : (
+          <>
+            <StatCard
+              label="Total Vehicles"
+              value={kpis?.total_vehicles ?? 0}
+              icon={<Truck className="h-4 w-4" />}
+              accent="primary"
+            />
+            <StatCard
+              label="Available"
+              value={kpis?.available_vehicles ?? 0}
+              unit={`/ ${kpis?.total_vehicles ?? 0}`}
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              accent="success"
+            />
+            <StatCard
+              label="In Maintenance"
+              value={kpis?.in_maintenance ?? 0}
+              icon={<Wrench className="h-4 w-4" />}
+              accent="warning"
+            />
+            <StatCard
+              label="On Trip"
+              value={kpis?.on_trip ?? 0}
+              icon={<RouteIcon className="h-4 w-4" />}
+              accent="info"
+            />
+            <StatCard
+              label="Active Trips"
+              value={kpis?.active_trips ?? 0}
+              icon={<Activity className="h-4 w-4" />}
+              accent="info"
+            />
+            <StatCard
+              label="Pending Trips"
+              value={kpis?.pending_trips ?? 0}
+              icon={<Clock className="h-4 w-4" />}
+              accent="warning"
+            />
+            <StatCard
+              label="Drivers On Duty"
+              value={kpis?.drivers_on_duty ?? 0}
+              icon={<UserCheck className="h-4 w-4" />}
+              accent="primary"
+            />
+            <StatCard
+              label="Fleet Utilization"
+              value={utilizationPct}
+              unit="%"
+              icon={<Gauge className="h-4 w-4" />}
+              accent="primary"
+            />
+          </>
+        )}
       </div>
 
+      {/* Operational cost & Quick actions */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-semibold">Operational Cost (30d)</h3>
-            <span className="text-xs text-muted-foreground">INR</span>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <CostPill label="Fuel" value={kpis?.fuel_cost_30d ?? 0} color="bg-orange-500" />
-            <CostPill label="Maintenance" value={kpis?.maintenance_cost_30d ?? 0} color="bg-red-500" />
-            <CostPill label="Total" value={kpis?.total_op_cost_30d ?? 0} color="bg-blue-500" />
-          </div>
-        </div>
-
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
-          <h3 className="mb-3 font-semibold">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <QuickAction to="/vehicles" label="Add Vehicle" />
-            <QuickAction to="/drivers" label="Add Driver" />
-            <QuickAction to="/maintenance" label="Log Maintenance" />
-            <QuickAction to="/fuel" label="Log Fuel" />
-          </div>
-        </div>
-      </div>
-
-      <DigitalTwinGrid />
-
-      <div className="rounded-xl border bg-card p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-semibold">Fleet Status</h3>
-          <span className="text-xs text-muted-foreground">{vehicles.length} assets tracked</span>
-        </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
-          {vehicles.map((v) => (
-            <div key={v.id} className="flex items-center gap-2 rounded-lg border bg-background p-2 text-xs transition hover:shadow-sm">
-              <span className={`h-2.5 w-2.5 rounded-full ${statusColor(v.status)}`} />
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{v.registrationNumber}</div>
-                <div className="truncate text-[10px] uppercase text-muted-foreground">{v.type}</div>
-              </div>
+        <Section
+          title="Operational Cost (30 days)"
+          description="Total fleet spend across fuel, maintenance, and expenses"
+          className="lg:col-span-2"
+        >
+          {loading ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
             </div>
-          ))}
-        </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <CostCard
+                label="Fuel"
+                value={kpis?.fuel_cost_30d ?? 0}
+                color="bg-orange-500"
+                icon={Fuel}
+                total={kpis?.total_op_cost_30d ?? 0}
+              />
+              <CostCard
+                label="Maintenance"
+                value={kpis?.maintenance_cost_30d ?? 0}
+                color="bg-red-500"
+                icon={Wrench}
+                total={kpis?.total_op_cost_30d ?? 0}
+              />
+              <CostCard
+                label="Total"
+                value={kpis?.total_op_cost_30d ?? 0}
+                color="bg-emerald-500"
+                icon={TrendingUp}
+                total={kpis?.total_op_cost_30d ?? 0}
+                primary
+              />
+            </div>
+          )}
+        </Section>
+
+        <Section title="Quick Actions" description="Common tasks">
+          <div className="grid grid-cols-2 gap-2">
+            <QuickAction to="/vehicles" label="Add Vehicle" icon={Truck} />
+            <QuickAction to="/drivers" label="Add Driver" icon={UserCheck} />
+            <QuickAction to="/maintenance" label="Log Service" icon={Wrench} />
+            <QuickAction to="/fuel" label="Log Fuel" icon={Fuel} />
+            <QuickAction to="/trips/new" label="New Trip" icon={Plus} />
+            <QuickAction to="/map" label="Live Map" icon={MapPin} />
+          </div>
+        </Section>
       </div>
+
+      {/* Fleet status overview & utilization */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Section
+          title="Fleet Status"
+          description={`${vehicles.length} assets tracked in real-time`}
+          className="lg:col-span-2"
+        >
+          {loading ? (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-12" />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatusSummary
+                  label="Available"
+                  count={vehicles.filter((v) => v.status === 'available').length}
+                  total={vehicles.length}
+                  status="available"
+                />
+                <StatusSummary
+                  label="On Trip"
+                  count={vehicles.filter((v) => v.status === 'on-trip').length}
+                  total={vehicles.length}
+                  status="on-trip"
+                />
+                <StatusSummary
+                  label="In Shop"
+                  count={vehicles.filter((v) => v.status === 'in-shop').length}
+                  total={vehicles.length}
+                  status="in-shop"
+                />
+                <StatusSummary
+                  label="Retired"
+                  count={vehicles.filter((v) => v.status === 'retired').length}
+                  total={vehicles.length}
+                  status="retired"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {vehicles.slice(0, 15).map((v) => (
+                  <Link
+                    key={v.id}
+                    to="/vehicles"
+                    className="group flex items-center gap-2 rounded-md border bg-background p-2 transition-all hover:border-primary/30 hover:shadow-soft"
+                  >
+                    <StatusDot status={v.status} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-foreground">
+                        {v.registrationNumber}
+                      </p>
+                      <p className="truncate text-[10px] uppercase text-muted-foreground">
+                        {v.type}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+        </Section>
+
+        <Section title="Availability" description={`${availablePct}% of fleet ready`}>
+          <div className="space-y-5">
+            <div>
+              <div className="mb-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight">{availablePct}%</span>
+                <span className="text-xs text-muted-foreground">available</span>
+              </div>
+              <ProgressBar
+                value={availablePct}
+                variant="success"
+                className="h-2"
+              />
+            </div>
+            <div className="space-y-3 border-t pt-4">
+              <UtilizationRow
+                label="On Trip"
+                value={kpis?.on_trip ?? 0}
+                total={kpis?.total_vehicles ?? 0}
+                color="bg-blue-500"
+              />
+              <UtilizationRow
+                label="In Maintenance"
+                value={kpis?.in_maintenance ?? 0}
+                total={kpis?.total_vehicles ?? 0}
+                color="bg-amber-500"
+              />
+              <UtilizationRow
+                label="Retired"
+                value={vehicles.filter((v) => v.status === 'retired').length}
+                total={vehicles.length}
+                color="bg-slate-400"
+              />
+            </div>
+          </div>
+        </Section>
+      </div>
+
+      {/* Digital Twin */}
+      <DigitalTwinGrid />
     </div>
   );
 }
 
-function statusColor(status: string) {
-  switch (status) {
-    case 'available':
-      return 'bg-emerald-500';
-    case 'on-trip':
-      return 'bg-blue-500';
-    case 'in-shop':
-      return 'bg-amber-500';
-    case 'retired':
-      return 'bg-slate-400';
-    default:
-      return 'bg-gray-400';
-  }
-}
-
-function CostPill({ label, value, color }: { label: string; value: number; color: string }) {
+function CostCard({
+  label,
+  value,
+  color,
+  icon: Icon,
+  total,
+  primary,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  icon: LucideIcon;
+  total: number;
+  primary?: boolean;
+}) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className="rounded-lg border bg-background p-3 text-center">
-      <div className={`mx-auto mb-2 h-1.5 w-10 rounded-full ${color}`} />
-      <div className="text-lg font-bold">₹{Math.round(value).toLocaleString()}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-lg border p-4 transition-all',
+        primary
+          ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent'
+          : 'bg-background',
+      )}
+    >
+      <div className="mb-2 flex items-center justify-between">
+        <div
+          className={cn('flex h-8 w-8 items-center justify-center rounded-md text-white', color)}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        {!primary && pct > 0 && (
+          <span className="text-[10px] font-semibold text-muted-foreground">{pct}%</span>
+        )}
+      </div>
+      <p className="text-xl font-bold tracking-tight">
+        ₹{Math.round(value).toLocaleString('en-IN')}
+      </p>
+      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
 
-function QuickAction({ to, label }: { to: string; label: string }) {
+function QuickAction({
+  to,
+  label,
+  icon: Icon,
+}: {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+}) {
   return (
     <Link
       to={to}
-      className="rounded-lg border bg-background px-3 py-2 text-center text-sm font-medium text-foreground transition hover:border-primary hover:text-primary"
+      className="group flex flex-col items-start gap-2 rounded-lg border bg-background p-3 transition-all hover:border-primary/40 hover:shadow-soft"
     >
-      {label}
+      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="flex w-full items-center justify-between">
+        <span className="text-xs font-semibold text-foreground">{label}</span>
+        <ArrowRight className="h-3 w-3 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      </div>
     </Link>
   );
 }
 
-function KpiCard({
+function StatusSummary({
   label,
-  value,
-  color,
-  icon,
+  count,
+  total,
+  status,
 }: {
   label: string;
-  value: string | number;
-  color: string;
-  icon: string;
+  count: number;
+  total: number;
+  status: string;
 }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div className="relative overflow-hidden rounded-xl border bg-card p-4 shadow-sm transition hover:shadow-md">
-      <div className={`absolute right-0 top-0 h-16 w-16 -translate-y-1/2 translate-x-1/2 rounded-full bg-gradient-to-br ${color} opacity-10 blur-2xl`} />
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-2xl font-bold tracking-tight">{value}</div>
-          <div className="mt-0.5 text-xs font-medium text-muted-foreground">{label}</div>
-        </div>
-        <div className={`rounded-lg bg-gradient-to-br ${color} p-1.5 text-white shadow-sm`}>
-          <Icon name={icon} />
-        </div>
+    <div className="flex items-center gap-3 rounded-lg border bg-background p-3">
+      <StatusDot status={status} className="h-2.5 w-2.5" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-lg font-bold tracking-tight">
+          {count}
+          <span className="ml-1 text-xs font-normal text-muted-foreground">({pct}%)</span>
+        </p>
       </div>
     </div>
   );
 }
 
-function Icon({ name }: { name: string }) {
-  const className = 'h-4 w-4';
-  switch (name) {
-    case 'truck':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M10 17h4V5H2v12h3m4 0v-5h4v5m-4 0H2m15 0h3a2 2 0 002-2V9h-5v8zm0-8h5l-2-3h-3v3z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'check':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'wrench':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'route':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 7m0 13V7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'activity':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'clock':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'user':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'gauge':
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm0-13a1 1 0 00-1 1v5l3 3 1.5-1.5L13 11V8a1 1 0 00-1-1z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    default:
-      return (
-        <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-  }
+function UtilizationRow({
+  label,
+  value,
+  total,
+  color,
+}: {
+  label: string;
+  value: number;
+  total: number;
+  color: string;
+}) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-semibold tabular-nums">
+          {value} <span className="text-muted-foreground/60">({pct}%)</span>
+        </span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn('h-full rounded-full transition-all duration-500', color)}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
 }
