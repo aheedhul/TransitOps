@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../features/trips/api/client.js';
+import { EmptyAuditState } from '../components/ui/empty-state.js';
 
 interface AuditEntry {
   id: string;
@@ -12,6 +14,7 @@ interface AuditEntry {
 }
 
 function AuditLogScreen() {
+  const { t } = useTranslation();
   const [logs, setLogs] = useState<AuditEntry[]>([]);
   const [filterEntity, setFilterEntity] = useState('');
   const [filterAction, setFilterAction] = useState('');
@@ -32,25 +35,25 @@ function AuditLogScreen() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Audit Log</h1>
+      <h1 className="text-2xl font-bold">{t('audit.title')}</h1>
 
       <div className="mt-4 flex gap-4">
         <select
           value={filterEntity}
           onChange={(e) => setFilterEntity(e.target.value)}
-          className="rounded-md border px-3 py-1 text-sm"
+          className="rounded-md border bg-background px-3 py-1 text-sm"
         >
-          <option value="">All Entities</option>
-          {entityTypes.map((t) => (
-            <option key={t} value={t}>{t}</option>
+          <option value="">{t('audit.allEntities')}</option>
+          {entityTypes.map((et) => (
+            <option key={et} value={et}>{et}</option>
           ))}
         </select>
         <input
           type="text"
           value={filterAction}
           onChange={(e) => setFilterAction(e.target.value)}
-          placeholder="Filter by action..."
-          className="rounded-md border px-3 py-1 text-sm"
+          placeholder={t('audit.filterByAction')}
+          className="rounded-md border bg-background px-3 py-1 text-sm"
         />
         <button
           onClick={() => {
@@ -69,7 +72,7 @@ function AuditLogScreen() {
           }}
           className="rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground"
         >
-          Export CSV
+          {t('audit.exportCsv')}
         </button>
       </div>
 
@@ -77,10 +80,10 @@ function AuditLogScreen() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left">
-              <th className="px-3 py-2">Time</th>
-              <th className="px-3 py-2">Action</th>
-              <th className="px-3 py-2">Entity</th>
-              <th className="px-3 py-2">Actor</th>
+              <th className="px-3 py-2">{t('audit.time')}</th>
+              <th className="px-3 py-2">{t('audit.action')}</th>
+              <th className="px-3 py-2">{t('audit.entity')}</th>
+              <th className="px-3 py-2">{t('audit.actor')}</th>
             </tr>
           </thead>
           <tbody>
@@ -97,7 +100,7 @@ function AuditLogScreen() {
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <p className="py-8 text-center text-muted-foreground">No audit entries found</p>
+          <EmptyAuditState />
         )}
       </div>
     </div>

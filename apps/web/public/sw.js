@@ -115,14 +115,23 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const route = event.notification.data?.route || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window' }).then((clients) => {
-      const client = clients[0];
-      if (client) {
+      const matching = clients.find((c) => c.url.includes(route) || route === '/');
+      if (matching) {
+        matching.focus();
+        matching.postMessage({ type: 'NOTIFICATION_CLICK', payload: event.notification.data, route });
+        if (route !== '/' && !matching.url.includes(route)) {
+          matching.navigate(route);
+        }
+      } else if (clients.length > 0) {
+        const client = clients[0];
         client.focus();
-        client.postMessage({ type: 'NOTIFICATION_CLICK', payload: event.notification.data });
+        client.navigate(route);
+        client.postMessage({ type: 'NOTIFICATION_CLICK', payload: event.notification.data, route });
       } else {
-        self.clients.openWindow('/');
+        self.clients.openWindow(route);
       }
     })
   );

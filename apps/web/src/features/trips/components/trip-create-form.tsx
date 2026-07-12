@@ -1,166 +1,160 @@
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useCreateTrip } from '../api/hooks.js';
-import type { CreateTripInput } from '../api/types.js';
+import { useNavigate, Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import { api } from '../api/client.js';
 
 export function TripCreateForm() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const create = useCreateTrip();
-  const [form, setForm] = useState<CreateTripInput>({
-    sourceLabel: '',
-    destinationLabel: '',
-    cargoWeightKg: 0,
-  });
+  const [sourceLabel, setSourceLabel] = useState('');
+  const [destinationLabel, setDestinationLabel] = useState('');
+  const [cargoWeightKg, setCargoWeightKg] = useState('');
+  const [cargoDescription, setCargoDescription] = useState('');
+  const [plannedDepartureAt, setPlannedDepartureAt] = useState('');
+  const [vehicleId, setVehicleId] = useState('');
+  const [driverId, setDriverId] = useState('');
+  const [customerId, setCustomerId] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    create.mutate(form, {
-      onSuccess: (data) => {
-        navigate({ to: `/trips/${data.data.id}` });
-      },
-    });
+    setSubmitting(true);
+    try {
+      await api.post('/trips', {
+        sourceLabel,
+        destinationLabel,
+        cargoWeightKg: parseFloat(cargoWeightKg),
+        cargoDescription: cargoDescription || undefined,
+        plannedDepartureAt: plannedDepartureAt || undefined,
+        vehicleId: vehicleId || undefined,
+        driverId: driverId || undefined,
+        customerId: customerId || undefined,
+      });
+      navigate({ to: '/trips' });
+    } catch {
+      // silent
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">New Trip</h1>
-        <button
-          onClick={() => navigate({ to: '/trips' })}
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          Cancel
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-        <div className="rounded-lg border p-4 space-y-4">
-          <h2 className="text-sm font-semibold">Route</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+    <div>
+      <h1 className="text-2xl font-bold">{t('tripForm.title')}</h1>
+      <form onSubmit={handleSubmit} className="mt-6 max-w-2xl space-y-6">
+        <div className="rounded-lg border bg-card p-4">
+          <h2 className="text-lg font-medium">{t('tripForm.route')}</h2>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium">Source Label</label>
+              <label className="block text-sm font-medium">{t('tripForm.sourceLabel')}</label>
               <input
                 type="text"
+                value={sourceLabel}
+                onChange={(e) => setSourceLabel(e.target.value)}
                 required
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.sourceLabel}
-                onChange={(e) => setForm({ ...form, sourceLabel: e.target.value })}
-                placeholder="e.g. Mumbai Depot"
+                placeholder={t('tripForm.sourcePlaceholder')}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Destination Label</label>
+              <label className="block text-sm font-medium">{t('tripForm.destinationLabel')}</label>
               <input
                 type="text"
+                value={destinationLabel}
+                onChange={(e) => setDestinationLabel(e.target.value)}
                 required
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.destinationLabel}
-                onChange={(e) => setForm({ ...form, destinationLabel: e.target.value })}
-                placeholder="e.g. Pune Warehouse"
+                placeholder={t('tripForm.destinationPlaceholder')}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border p-4 space-y-4">
-          <h2 className="text-sm font-semibold">Cargo</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border bg-card p-4">
+          <h2 className="text-lg font-medium">{t('tripForm.cargo')}</h2>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium">Weight (kg)</label>
+              <label className="block text-sm font-medium">{t('tripForm.weight')}</label>
               <input
                 type="number"
+                value={cargoWeightKg}
+                onChange={(e) => setCargoWeightKg(e.target.value)}
                 required
-                min={1}
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.cargoWeightKg || ''}
-                onChange={(e) => setForm({ ...form, cargoWeightKg: parseFloat(e.target.value) || 0 })}
-                placeholder="e.g. 5000"
+                min="0.01"
+                step="0.01"
+                placeholder={t('tripForm.weightPlaceholder')}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Description</label>
+              <label className="block text-sm font-medium">{t('tripForm.description')}</label>
               <input
                 type="text"
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.cargoDescription || ''}
-                onChange={(e) => setForm({ ...form, cargoDescription: e.target.value })}
-                placeholder="e.g. Electronics"
+                value={cargoDescription}
+                onChange={(e) => setCargoDescription(e.target.value)}
+                placeholder={t('tripForm.descriptionPlaceholder')}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border p-4 space-y-4">
-          <h2 className="text-sm font-semibold">Optional Details</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border bg-card p-4">
+          <h2 className="text-lg font-medium">{t('tripForm.optionalDetails')}</h2>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium">Planned Departure</label>
+              <label className="block text-sm font-medium">{t('tripForm.plannedDeparture')}</label>
               <input
                 type="datetime-local"
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.plannedDepartureAt ? form.plannedDepartureAt.slice(0, 16) : ''}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    plannedDepartureAt: e.target.value ? new Date(e.target.value).toISOString() : undefined,
-                  })
-                }
+                value={plannedDepartureAt}
+                onChange={(e) => setPlannedDepartureAt(e.target.value)}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Vehicle ID</label>
+              <label className="block text-sm font-medium">{t('tripForm.vehicleId')}</label>
               <input
                 type="text"
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.vehicleId || ''}
-                onChange={(e) => setForm({ ...form, vehicleId: e.target.value || undefined })}
-                placeholder="UUID"
+                value={vehicleId}
+                onChange={(e) => setVehicleId(e.target.value)}
+                placeholder={t('tripForm.uuidPlaceholder')}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Driver ID</label>
+              <label className="block text-sm font-medium">{t('tripForm.driverId')}</label>
               <input
                 type="text"
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.driverId || ''}
-                onChange={(e) => setForm({ ...form, driverId: e.target.value || undefined })}
-                placeholder="UUID"
+                value={driverId}
+                onChange={(e) => setDriverId(e.target.value)}
+                placeholder={t('tripForm.uuidPlaceholder')}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Customer ID</label>
+              <label className="block text-sm font-medium">{t('tripForm.customerId')}</label>
               <input
                 type="text"
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
-                value={form.customerId || ''}
-                onChange={(e) => setForm({ ...form, customerId: e.target.value || undefined })}
-                placeholder="UUID"
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value)}
+                placeholder={t('tripForm.uuidPlaceholder')}
+                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
         </div>
-
-        {create.error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {(create.error as Error).message}
-          </div>
-        )}
 
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={create.isPending}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            disabled={submitting}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            {create.isPending ? 'Creating...' : 'Create Trip'}
+            {submitting ? t('tripForm.creating') : t('tripForm.create')}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate({ to: '/trips' })}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-muted"
-          >
-            Cancel
-          </button>
+          <Link to="/trips" className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent">
+            {t('common.cancel')}
+          </Link>
         </div>
       </form>
     </div>

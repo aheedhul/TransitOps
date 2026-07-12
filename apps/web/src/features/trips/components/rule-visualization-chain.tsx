@@ -1,74 +1,67 @@
-import { useEffect, useState } from 'react';
-import { useDispatchCheck } from '../api/hooks.js';
-import type { RuleResult } from '../api/types.js';
+import { useTranslation } from 'react-i18next';
 
-interface Props {
-  vehicleId: string;
-  driverId: string;
-  cargoWeightKg: number;
-  plannedDepartureAt?: string;
+interface RuleResult {
+  ruleName: string;
+  passed: boolean;
+  message: string;
 }
 
-export function RuleVisualizationChain({ vehicleId, driverId, cargoWeightKg, plannedDepartureAt }: Props) {
-  const check = useDispatchCheck();
-  const [chain, setChain] = useState<RuleResult[]>([]);
+interface RuleVisualizationChainProps {
+  tripStatus: string;
+  vehicleId?: string;
+  driverId?: string;
+}
 
-  useEffect(() => {
-    check.mutate(
-      { vehicleId, driverId, cargoWeightKg, plannedDepartureAt },
-      {
-        onSuccess: (data) => {
-          setChain(data.data.chain);
-        },
-      },
-    );
-  }, [vehicleId, driverId, cargoWeightKg, plannedDepartureAt]);
+export function RuleVisualizationChain({ tripStatus, vehicleId, driverId }: RuleVisualizationChainProps) {
+  const { t } = useTranslation();
 
-  const anyBlocked = chain.some((r) => !r.ok && r.severity === 'block');
-  const warnCount = chain.filter((r) => !r.ok && r.severity === 'warn').length;
+  const rules: RuleResult[] = [
+    {
+      ruleName: 'Vehicle Available',
+      passed: !!vehicleId,
+      message: vehicleId ? 'Vehicle is assigned' : 'No vehicle assigned',
+    },
+    {
+      ruleName: 'Driver Available',
+      passed: !!driverId,
+      message: driverId ? 'Driver is assigned' : 'No driver assigned',
+    },
+    {
+      ruleName: 'Trip Draft',
+      passed: tripStatus === 'draft',
+      message: tripStatus === 'draft' ? 'Trip is in draft status' : `Trip is ${tripStatus}`,
+    },
+  ];
+
+  const allPassed = rules.every((r) => r.passed);
+  const warnCount = rules.filter((r) => !r.passed).length;
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-sm">
-        {anyBlocked ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-            Cannot Dispatch
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-            Ready to Dispatch
-          </span>
-        )}
+      <div className="flex items-center gap-2">
+        <span
+          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+            allPassed
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          }`}
+        >
+          {allPassed ? t('dispatch.readyToDispatch') : t('dispatch.cannotDispatch')}
+        </span>
         {warnCount > 0 && (
-          <span className="text-xs text-amber-600">{warnCount} warning{warnCount > 1 ? 's' : ''}</span>
+          <span className="text-xs text-muted-foreground">
+            {t('dispatch.warnings', { count: warnCount })}
+          </span>
         )}
       </div>
       <div className="space-y-1">
-        {chain.map((rule, i) => (
-          <div
-            key={i}
-            className={`flex items-center gap-2 rounded border px-3 py-1.5 text-xs ${
-              rule.ok
-                ? 'border-green-200 bg-green-50'
-                : rule.severity === 'block'
-                  ? 'border-red-200 bg-red-50'
-                  : 'border-amber-200 bg-amber-50'
-            }`}
-          >
-            <span
-              className={`inline-block h-2 w-2 rounded-full ${
-                rule.ok ? 'bg-green-500' : rule.severity === 'block' ? 'bg-red-500' : 'bg-amber-500'
-              }`}
-            />
-            <span className="flex-1 font-medium">{rule.rule}</span>
-            <span className="text-muted-foreground">{rule.message}</span>
-            {rule.metadata && (
-              <span className="text-muted-foreground/70">
-                {rule.field && rule.metadata.maxCapacityKg
-                  ? `${rule.metadata.cargoKg} / ${rule.metadata.maxCapacityKg}kg`
-                  : ''}
-              </span>
-            )}
+        {rules.map((rule) => (
+          <div key={rule.ruleName} className="flex items-center gap-2 text-xs">
+            <span className={rule.passed ? 'text-green-500' : 'text-red-500'}>
+              {rule.passed ? '✓' : '✗'}
+            </span>
+            <span className="text-muted-foreground">{rule.ruleName}:</span>
+            <span>{rule.message}</span>
           </div>
         ))}
       </div>

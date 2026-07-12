@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../features/trips/api/client.js';
+import { EmptyNotificationState } from '../components/ui/empty-state.js';
 
 interface NotificationItem {
   id: string;
@@ -13,6 +15,7 @@ interface NotificationItem {
 }
 
 function NotificationCenter() {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [filter, setFilter] = useState<string>('all');
 
@@ -31,7 +34,7 @@ function NotificationCenter() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Notification Center</h1>
+        <h1 className="text-2xl font-bold">{t('notifications.title')}</h1>
         <div className="flex gap-2">
           {['all', 'unread', 'red', 'orange', 'blue'].map((f) => (
             <button
@@ -39,7 +42,7 @@ function NotificationCenter() {
               onClick={() => setFilter(f)}
               className={`rounded-md px-3 py-1 text-sm ${filter === f ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === 'all' ? t('notifications.all') : f === 'unread' ? t('notifications.unread') : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
@@ -47,7 +50,7 @@ function NotificationCenter() {
 
       <div className="mt-6 space-y-2">
         {filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground">No notifications</p>
+          <EmptyNotificationState />
         ) : (
           filtered.map((n) => (
             <div

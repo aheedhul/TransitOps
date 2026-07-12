@@ -1,4 +1,5 @@
 import { useEffect, useState, type FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fleetApi, type FleetPosition } from '../api/client.js';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -9,6 +10,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export const DigitalTwinGrid: FC = () => {
+  const { t } = useTranslation();
   const [positions, setPositions] = useState<FleetPosition[]>([]);
 
   useEffect(() => {
@@ -22,15 +24,15 @@ export const DigitalTwinGrid: FC = () => {
   if (positions.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-4">
-        <h3 className="text-sm font-semibold mb-2">Digital Twin</h3>
-        <p className="text-xs text-muted-foreground">No vehicle position data yet.</p>
+        <h3 className="text-sm font-semibold mb-2">{t('digitalTwin.title')}</h3>
+        <p className="text-xs text-muted-foreground">{t('digitalTwin.noData')}</p>
       </div>
     );
   }
 
   return (
     <div className="rounded-lg border bg-card p-4">
-      <h3 className="text-sm font-semibold mb-3">Digital Twin ({positions.length} vehicles)</h3>
+      <h3 className="text-sm font-semibold mb-3">{t('digitalTwin.titleWithCount', { count: positions.length })}</h3>
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
@@ -39,7 +41,7 @@ export const DigitalTwinGrid: FC = () => {
         {positions.map((p) => (
           <a
             key={p.vehicleId}
-            href={`/vehicles`}
+            href="/vehicles"
             title={`${p.vehicleName} — ${p.vehicleStatus}`}
             style={{
               display: 'flex',

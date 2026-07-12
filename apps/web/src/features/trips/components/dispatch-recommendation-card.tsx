@@ -1,112 +1,87 @@
 import { useState } from 'react';
-import { useDispatchRecommendation } from '../api/hooks.js';
-import type { TripResponse } from '../api/types.js';
+import { useTranslation } from 'react-i18next';
+import { api } from '../api/client.js';
 
-interface Props {
-  trip: TripResponse;
+interface VehicleCandidate {
+  vehicleId: string;
+  vehicleRegistration: string;
+  driverId: string;
+  driverName: string;
+  score: number;
+  reasonSummary: string;
 }
 
-export function DispatchRecommendationCard({ trip }: Props) {
-  const rec = useDispatchRecommendation();
-  const [expanded, setExpanded] = useState(false);
+interface RecommendationResponse {
+  topPick?: VehicleCandidate;
+  alternatives: VehicleCandidate[];
+}
 
-  const cargoWeight = parseFloat(trip.cargoWeightKg);
+export function DispatchRecommendationCard({ tripId }: { tripId: string }) {
+  const { t } = useTranslation();
+  const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showAlternatives, setShowAlternatives] = useState(false);
 
-  const handleCheck = () => {
-    rec.mutate(
-      {
-        cargoWeightKg: cargoWeight,
-        sourceLat: trip.sourceLat ?? undefined,
-        sourceLng: trip.sourceLng ?? undefined,
-        plannedDepartureAt: trip.plannedDepartureAt ?? undefined,
-      },
-    );
+  const fetchRecommendation = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get<{ data: RecommendationResponse }>(`/intelligence/dispatch-recommendation?tripId=${tripId}`);
+      setRecommendation(res.data);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-3">
+    <div>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Dispatch Recommendation</h3>
-        <button
-          onClick={handleCheck}
-          disabled={rec.isPending}
-          className="rounded border px-3 py-1 text-xs hover:bg-muted disabled:opacity-50"
-        >
-          {rec.isPending ? 'Analyzing...' : 'Get Recommendation'}
-        </button>
+        <h3 className="text-sm font-semibold">{t('dispatch.title')}</h3>
+        {!recommendation && (
+          <button
+            onClick={fetchRecommendation}
+            disabled={loading}
+            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {loading ? t('dispatch.analyzing') : t('dispatch.getRecommendation')}
+          </button>
+        )}
       </div>
 
-      {rec.data?.data?.recommendation && (
-        <div className="space-y-3">
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-medium text-blue-700">Top Pick</span>
-                <p className="mt-1 text-sm">
-                  Vehicle <code className="text-xs">{rec.data.data.recommendation.vehicleId.slice(0, 8)}...</code>
-                  {' + '}
-                  Driver <code className="text-xs">{rec.data.data.recommendation.driverId.slice(0, 8)}...</code>
-                </p>
-              </div>
-              <span className="text-lg font-bold text-blue-700">
-                {rec.data.data.recommendation.confidence}%
-              </span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {rec.data.data.recommendation.reasons.map((r: { key: string; ok: boolean; message: string }, i: number) => (
-                <span
-                  key={i}
-                  className={`inline-flex rounded-full px-2 py-0.5 text-xs ${
-                    r.ok ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                  }`}
-                  title={r.message}
-                >
-                  {r.key}
-                </span>
-              ))}
-            </div>
+      {recommendation?.topPick && (
+        <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950/30">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-green-200 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-800 dark:text-green-200">
+              {t('dispatch.topPick')}
+            </span>
+            <span className="text-sm font-medium">{recommendation.topPick.vehicleRegistration}</span>
           </div>
+          <p className="mt-1 text-xs text-muted-foreground">{recommendation.topPick.reasonSummary}</p>
+        </div>
+      )}
 
-          {expanded && rec.data.data.alternatives.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">Alternatives</h4>
-              {rec.data.data.alternatives.slice(0, 3).map((alt: { vehicleId: string; driverId: string; confidence: number; reasons: { key: string }[] }, i: number) => (
-                <div key={i} className="rounded border p-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span>
-                      <code className="text-xs">{alt.vehicleId.slice(0, 8)}...</code> +{' '}
-                      <code className="text-xs">{alt.driverId.slice(0, 8)}...</code>
-                    </span>
-                    <span className="font-bold text-muted-foreground">{alt.confidence}%</span>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {alt.reasons.map((r: { key: string }, j: number) => (
-                      <span
-                        key={j}
-                        className="inline-flex rounded-full px-1.5 py-0.5 text-xs bg-muted text-muted-foreground"
-                      >
-                        {r.key}
-                      </span>
-                    ))}
-                  </div>
+      {recommendation?.alternatives && recommendation.alternatives.length > 0 && (
+        <div className="mt-3">
+          <button
+            onClick={() => setShowAlternatives(!showAlternatives)}
+            className="text-xs text-primary hover:underline"
+          >
+            {showAlternatives
+              ? t('dispatch.hideAlternatives')
+              : t('dispatch.showAlternatives', { count: recommendation.alternatives.length })}
+          </button>
+          {showAlternatives && (
+            <div className="mt-2 space-y-2">
+              {recommendation.alternatives.map((alt) => (
+                <div key={alt.vehicleId} className="rounded-md border bg-muted/30 p-2">
+                  <span className="text-sm font-medium">{alt.vehicleRegistration}</span>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{alt.reasonSummary}</p>
                 </div>
               ))}
             </div>
           )}
-
-          {rec.data.data.alternatives.length > 0 && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-xs text-blue-600 hover:underline"
-            >
-              {expanded ? 'Hide alternatives' : `Show ${rec.data.data.alternatives.length} alternatives`}
-            </button>
-          )}
         </div>
-      )}
-
-      {rec.error && (
-        <p className="text-xs text-red-500">{(rec.error as Error).message}</p>
       )}
     </div>
   );

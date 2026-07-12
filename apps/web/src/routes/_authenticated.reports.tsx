@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../features/auth/store.js';
 
 type Tab = 'fleet' | 'financial' | 'esg' | 'utilization';
@@ -65,10 +66,20 @@ interface UtilizationItem {
   trip_count: number;
 }
 
-function KpiCard({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
+function KpiCard({ label, value, unit, tooltip }: { label: string; value: string | number; unit?: string; tooltip?: string }) {
   return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm">
-      <div className="text-sm text-muted-foreground">{label}</div>
+    <div className="rounded-lg border bg-card p-4 shadow-sm group relative">
+      <div className="flex items-center gap-1">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        {tooltip && (
+          <span className="relative">
+            <span className="cursor-help text-muted-foreground/50 text-xs" aria-label={tooltip}>&#9432;</span>
+            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-56 rounded-md bg-foreground px-3 py-2 text-xs text-background opacity-0 transition-opacity group-hover:opacity-100 z-50">
+              {tooltip}
+            </span>
+          </span>
+        )}
+      </div>
       <div className="mt-1 text-2xl font-bold">
         {value}
         {unit && <span className="ml-1 text-sm font-normal text-muted-foreground">{unit}</span>}
@@ -78,6 +89,7 @@ function KpiCard({ label, value, unit }: { label: string; value: string | number
 }
 
 function DownloadButton({ reportType }: { reportType: string }) {
+  const { t } = useTranslation();
   const handleDownload = async () => {
     const { session } = useAuthStore.getState();
     const headers: Record<string, string> = {};
@@ -100,7 +112,7 @@ function DownloadButton({ reportType }: { reportType: string }) {
       onClick={handleDownload}
       className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent"
     >
-      Download CSV
+      {t('common.downloadCsv')}
     </button>
   );
 }
@@ -128,67 +140,84 @@ function useReportData<T>(path: string) {
 }
 
 function FleetTab() {
+  const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<FleetKPIs>('/reports/fleet-kpis');
 
   if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">Loading fleet KPIs...</div>;
+  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('common.loading')}</div>;
   if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data) return <div className="py-8 text-center text-muted-foreground">No data available.</div>;
+  if (!data) return <div className="py-8 text-center text-muted-foreground">{t('reports.noData')}</div>;
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Fleet KPIs (30 days)</h2>
+        <h2 className="text-lg font-semibold">{t('reports.fleetKpis')}</h2>
         <DownloadButton reportType="fleet-kpis" />
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label="Total Vehicles" value={data.total_vehicles} />
-        <KpiCard label="Available" value={data.available_vehicles} />
-        <KpiCard label="In Maintenance" value={data.in_maintenance} />
-        <KpiCard label="On Trip" value={data.on_trip} />
-        <KpiCard label="Active Trips" value={data.active_trips} />
-        <KpiCard label="Pending Trips" value={data.pending_trips} />
-        <KpiCard label="Drivers On Duty" value={data.drivers_on_duty} />
-        <KpiCard label="Completed (30d)" value={data.completed_trips_30d} unit="trips" />
+        <KpiCard label={t('reports.totalVehicles')} value={data.total_vehicles} tooltip={t('metrics.totalVehicles')} />
+        <KpiCard label={t('reports.available')} value={data.available_vehicles} tooltip={t('metrics.available')} />
+        <KpiCard label={t('reports.inMaintenance')} value={data.in_maintenance} tooltip={t('metrics.inMaintenance')} />
+        <KpiCard label={t('reports.onTrip')} value={data.on_trip} tooltip={t('metrics.onTrip')} />
+        <KpiCard label={t('reports.activeTrips')} value={data.active_trips} tooltip={t('metrics.activeTrips')} />
+        <KpiCard label={t('reports.pendingTrips')} value={data.pending_trips} tooltip={t('metrics.pendingTrips')} />
+        <KpiCard label={t('reports.driversOnDuty')} value={data.drivers_on_duty} tooltip={t('metrics.driversOnDuty')} />
+        <KpiCard label={t('reports.completed30d')} value={data.completed_trips_30d} unit={t('trips.title').toLowerCase()} tooltip={t('metrics.completed30d')} />
       </div>
 
-      <h3 className="mt-8 mb-4 text-lg font-semibold">Operational Costs (30 days)</h3>
+      <h3 className="mt-8 mb-4 text-lg font-semibold">{t('reports.opCosts')}</h3>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label="Fuel Cost" value={`₹ ${data.fuel_cost_30d.toLocaleString()}`} />
-        <KpiCard label="Maintenance Cost" value={`₹ ${data.maintenance_cost_30d.toLocaleString()}`} />
-        <KpiCard label="Expenses" value={`₹ ${data.expenses_30d.toLocaleString()}`} />
-        <KpiCard label="Total Op Cost" value={`₹ ${data.total_op_cost_30d.toLocaleString()}`} />
+        <KpiCard label={t('reports.fuelCost')} value={`\u20B9 ${data.fuel_cost_30d.toLocaleString()}`} tooltip={t('metrics.fuelCost')} />
+        <KpiCard label={t('reports.maintenanceCost')} value={`\u20B9 ${data.maintenance_cost_30d.toLocaleString()}`} tooltip={t('metrics.maintenanceCost')} />
+        <KpiCard label={t('reports.expenses')} value={`\u20B9 ${data.expenses_30d.toLocaleString()}`} tooltip={t('metrics.expenses')} />
+        <KpiCard label={t('reports.totalOpCost')} value={`\u20B9 ${data.total_op_cost_30d.toLocaleString()}`} tooltip={t('metrics.totalOpCost')} />
       </div>
     </div>
   );
 }
 
 function FinancialTab() {
+  const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<VehicleHealth[]>('/reports/vehicle-health');
 
   if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">Loading vehicle health...</div>;
+  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('healthData.loading')}</div>;
   if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data || data.length === 0) return <div className="py-8 text-center text-muted-foreground">No vehicle health data. Health scores are computed after trip completion, maintenance closure, or fuel anomaly events.</div>;
+  if (!data || data.length === 0) return <div className="py-8 text-center text-muted-foreground">{t('healthData.noData')}</div>;
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Vehicle Health Scores</h2>
+        <h2 className="text-lg font-semibold">{t('reports.vehicleHealth')}</h2>
       </div>
 
       <div className="overflow-x-auto rounded-lg border">
         <table className="min-w-full text-sm">
           <thead className="bg-muted">
             <tr>
-              <th className="px-4 py-2 text-left">Vehicle</th>
-              <th className="px-4 py-2 text-left">Type</th>
-              <th className="px-4 py-2 text-right">Fuel Eff.</th>
-              <th className="px-4 py-2 text-right">Maint.</th>
-              <th className="px-4 py-2 text-right">Driver Safety</th>
-              <th className="px-4 py-2 text-right">Utilization</th>
-              <th className="px-4 py-2 text-right">Overall</th>
+              <th className="px-4 py-2 text-left">{t('reports.vehicle')}</th>
+              <th className="px-4 py-2 text-left">{t('reports.type')}</th>
+              <th className="px-4 py-2 text-right group relative">
+                {t('reports.fuelEff')}
+                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.fuelEff')}>&#9432;</span>
+              </th>
+              <th className="px-4 py-2 text-right group relative">
+                {t('reports.maint')}
+                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.maint')}>&#9432;</span>
+              </th>
+              <th className="px-4 py-2 text-right group relative">
+                {t('reports.driverSafety')}
+                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.driverSafety')}>&#9432;</span>
+              </th>
+              <th className="px-4 py-2 text-right group relative">
+                {t('reports.utilization')}
+                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.utilization')}>&#9432;</span>
+              </th>
+              <th className="px-4 py-2 text-right group relative">
+                {t('reports.overall')}
+                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.overall')}>&#9432;</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -211,41 +240,42 @@ function FinancialTab() {
 }
 
 function ESGTab() {
+  const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<EmissionsData>('/reports/emissions');
 
   if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">Loading emissions data...</div>;
+  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('emissionsData.loading')}</div>;
   if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data) return <div className="py-8 text-center text-muted-foreground">No emissions data. Emissions are recorded when trips with fuel consumption data complete.</div>;
+  if (!data) return <div className="py-8 text-center text-muted-foreground">{t('emissionsData.noData')}</div>;
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">CO2 Emissions (30 days)</h2>
+        <h2 className="text-lg font-semibold">{t('reports.co2Emissions')}</h2>
         <DownloadButton reportType="emissions" />
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label="Total CO2" value={`${Math.round(data.total_co2_kg)}`} unit="kg" />
-        <KpiCard label="Total Distance" value={`${Math.round(data.total_distance_km)}`} unit="km" />
-        <KpiCard label="CO2 Intensity" value={
+        <KpiCard label={t('reports.totalCo2')} value={`${Math.round(data.total_co2_kg)}`} unit="kg" tooltip={t('metrics.totalCo2')} />
+        <KpiCard label={t('reports.totalDistance')} value={`${Math.round(data.total_distance_km)}`} unit="km" tooltip={t('metrics.totalDistance')} />
+        <KpiCard label={t('reports.co2Intensity')} value={
           data.total_distance_km > 0
             ? `${Math.round(data.total_co2_kg / data.total_distance_km * 1000)}`
-            : 'N/A'
-        } unit={data.total_distance_km > 0 ? 'g/km' : ''} />
-        <KpiCard label="Reporting Method" value="IPCC/GHG" />
+            : t('common.na')
+        } unit={data.total_distance_km > 0 ? 'g/km' : ''} tooltip={t('metrics.co2Intensity')} />
+        <KpiCard label={t('reports.reportingMethod')} value="IPCC/GHG" tooltip={t('metrics.reportingMethod')} />
       </div>
 
-      <h3 className="mt-8 mb-4 text-lg font-semibold">Per-Vehicle Emissions</h3>
+      <h3 className="mt-8 mb-4 text-lg font-semibold">{t('reports.perVehicleEmissions')}</h3>
       <div className="overflow-x-auto rounded-lg border">
         <table className="min-w-full text-sm">
           <thead className="bg-muted">
             <tr>
-              <th className="px-4 py-2 text-left">Vehicle</th>
-              <th className="px-4 py-2 text-right">CO2 (kg)</th>
-              <th className="px-4 py-2 text-right">Distance (km)</th>
-              <th className="px-4 py-2 text-right">Trips</th>
-              <th className="px-4 py-2 text-right">g CO2 / km</th>
+              <th className="px-4 py-2 text-left">{t('reports.vehicle')}</th>
+              <th className="px-4 py-2 text-right">{t('reports.co2Kg')}</th>
+              <th className="px-4 py-2 text-right">{t('reports.distanceKm')}</th>
+              <th className="px-4 py-2 text-right">{t('reports.trips')}</th>
+              <th className="px-4 py-2 text-right">{t('reports.co2PerKm')}</th>
             </tr>
           </thead>
           <tbody>
@@ -265,15 +295,16 @@ function ESGTab() {
       </div>
 
       <div className="mt-4 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
-        <p>Emission factors: Diesel 2.68 kg/L, Petrol 2.31 kg/L, CNG 1.93 kg/L (IPCC 2006). Values where fuel records are absent use estimated consumption.</p>
+        <p>{t('emissionsData.footnote')}</p>
       </div>
     </div>
   );
 }
 
 function UtilizationHeatmap({ data }: { data: UtilizationItem[] }) {
+  const { t } = useTranslation();
   if (data.length === 0) {
-    return <div className="py-4 text-center text-muted-foreground">No utilization data available.</div>;
+    return <div className="py-4 text-center text-muted-foreground">{t('utilizationData.noDataAvailable')}</div>;
   }
 
   const maxUtil = Math.max(...data.map((d) => d.utilization_pct), 1);
@@ -302,7 +333,7 @@ function UtilizationHeatmap({ data }: { data: UtilizationItem[] }) {
               {item.utilization_pct}%
             </div>
             <div className="w-12 shrink-0 text-right text-xs text-muted-foreground">
-              {item.trip_count} trips
+              {item.trip_count} {t('reports.trips').toLowerCase()}
             </div>
           </div>
         );
@@ -312,30 +343,31 @@ function UtilizationHeatmap({ data }: { data: UtilizationItem[] }) {
 }
 
 function UtilizationTab() {
+  const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<UtilizationItem[]>('/reports/utilization');
 
   if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">Loading utilization data...</div>;
+  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('utilizationData.loading')}</div>;
   if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data) return <div className="py-8 text-center text-muted-foreground">No utilization data. Complete some trips to see utilization metrics.</div>;
+  if (!data) return <div className="py-8 text-center text-muted-foreground">{t('utilizationData.noData')}</div>;
 
   const avgUtil = Math.round(data.reduce((s, d) => s + d.utilization_pct, 0) / data.length);
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Vehicle Utilization (30 days)</h2>
+        <h2 className="text-lg font-semibold">{t('reports.vehicleUtilization')}</h2>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        <KpiCard label="Average Utilization" value={avgUtil} unit="%" />
-        <KpiCard label="Vehicles Tracked" value={data.length} />
-        <KpiCard label="Busiest Vehicle" value={
-          data.length > 0 ? data[0]!.registration : 'N/A'
-        } unit={`${data.length > 0 ? data[0]!.utilization_pct : 0}%`} />
+        <KpiCard label={t('reports.avgUtilization')} value={avgUtil} unit="%" tooltip={t('metrics.avgUtilization')} />
+        <KpiCard label={t('reports.vehiclesTracked')} value={data.length} tooltip={t('metrics.vehiclesTracked')} />
+        <KpiCard label={t('reports.busiestVehicle')} value={
+          data.length > 0 ? data[0]!.registration : t('common.na')
+        } unit={`${data.length > 0 ? data[0]!.utilization_pct : 0}%`} tooltip={t('metrics.busiestVehicle')} />
       </div>
 
-      <h3 className="mt-8 mb-4 text-lg font-semibold">Per-Vehicle Breakdown</h3>
+      <h3 className="mt-8 mb-4 text-lg font-semibold">{t('reports.perVehicleBreakdown')}</h3>
       <div className="rounded-lg border p-4">
         <UtilizationHeatmap data={data} />
       </div>
@@ -343,15 +375,15 @@ function UtilizationTab() {
       <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded-sm bg-green-500" />
-          <span>&ge;70% (Good)</span>
+          <span>{t('reports.utilizationGood')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded-sm bg-yellow-500" />
-          <span>40-69% (Moderate)</span>
+          <span>{t('reports.utilizationModerate')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="h-3 w-3 rounded-sm bg-red-500" />
-          <span>&lt;40% (Low)</span>
+          <span>{t('reports.utilizationLow')}</span>
         </div>
       </div>
     </div>
@@ -359,19 +391,20 @@ function UtilizationTab() {
 }
 
 function ReportsPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('fleet');
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'fleet', label: 'Fleet Overview' },
-    { key: 'financial', label: 'Financial' },
-    { key: 'esg', label: 'ESG / CO2' },
-    { key: 'utilization', label: 'Utilization' },
+    { key: 'fleet', label: t('reports.fleetOverview') },
+    { key: 'financial', label: t('reports.financial') },
+    { key: 'esg', label: t('reports.esg') },
+    { key: 'utilization', label: t('reports.utilization') },
   ];
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Reports & Analytics</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Performance metrics, costs, emissions, and fleet health.</p>
+      <h1 className="text-2xl font-bold">{t('reports.title')}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t('reports.subtitle')}</p>
 
       <div className="mt-6 border-b" role="tablist">
         <div className="flex gap-0 -mb-px">

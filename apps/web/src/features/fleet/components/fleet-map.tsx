@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, type FC } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { useTranslation } from 'react-i18next';
 import { fleetApi, type FleetPosition } from '../api/client.js';
 import { useFleetWebSocket } from '../hooks/use-fleet-websocket.js';
 import 'leaflet/dist/leaflet.css';
@@ -49,6 +50,7 @@ function MapUpdater({ positions }: { positions: FleetPosition[] }) {
 }
 
 export const FleetMap: FC = () => {
+  const { t } = useTranslation();
   const [positions, setPositions] = useState<FleetPosition[]>([]);
   const [selected, setSelected] = useState<FleetPosition | null>(null);
 
@@ -98,14 +100,14 @@ export const FleetMap: FC = () => {
                 <div style={{ minWidth: 180 }}>
                   <strong>{p.vehicleName}</strong>
                   <div style={{ fontSize: 12, marginTop: 4 }}>
-                    Status: <span style={{ color: STATUS_COLORS[p.vehicleStatus] }}>{p.vehicleStatus}</span>
+                    {t('fleetMap.status')}: <span style={{ color: STATUS_COLORS[p.vehicleStatus] }}>{p.vehicleStatus}</span>
                   </div>
                   <div style={{ fontSize: 12 }}>
-                    Speed: {p.speedKmph} km/h
-                    {p.heading != null && <> &middot; Heading: {p.heading}&deg;</>}
+                    {t('fleetMap.speed')}: {p.speedKmph} km/h
+                    {p.heading != null && <> &middot; {t('fleetMap.heading')}: {p.heading}&deg;</>}
                   </div>
                   {p.odometerKm != null && (
-                    <div style={{ fontSize: 12 }}>Odometer: {p.odometerKm} km</div>
+                    <div style={{ fontSize: 12 }}>{t('fleetMap.odometer')}: {p.odometerKm} km</div>
                   )}
                   <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
                     {new Date(p.recordedAt).toLocaleString()}
@@ -115,7 +117,7 @@ export const FleetMap: FC = () => {
                       href={`/trips/${p.tripId}`}
                       style={{ fontSize: 12, display: 'block', marginTop: 6 }}
                     >
-                      View Trip &rarr;
+                      {t('fleetMap.viewTrip')} &rarr;
                     </a>
                   )}
                 </div>
@@ -127,14 +129,15 @@ export const FleetMap: FC = () => {
 
       <aside style={{
         width: 280,
-        borderLeft: '1px solid #e5e7eb',
+        borderLeft: '1px solid hsl(var(--border))',
         overflowY: 'auto',
         padding: 16,
-        background: '#f9fafb',
+        background: 'hsl(var(--card))',
+        color: 'hsl(var(--card-foreground))',
       }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Fleet Vehicles</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('fleetMap.fleetVehicles')}</h3>
         {positions.length === 0 && (
-          <p style={{ fontSize: 13, color: '#9ca3af' }}>No vehicle positions available</p>
+          <p style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>{t('fleetMap.noPositions')}</p>
         )}
         {positions.map((p) => (
           <div
@@ -145,8 +148,8 @@ export const FleetMap: FC = () => {
               marginBottom: 6,
               borderRadius: 6,
               cursor: 'pointer',
-              border: '1px solid #e5e7eb',
-              background: selected?.vehicleId === p.vehicleId ? '#eff6ff' : '#fff',
+              border: '1px solid hsl(var(--border))',
+              background: selected?.vehicleId === p.vehicleId ? 'hsl(var(--accent))' : 'hsl(var(--card))',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -157,7 +160,7 @@ export const FleetMap: FC = () => {
               }} />
               <span style={{ fontSize: 13, fontWeight: 500 }}>{p.vehicleName}</span>
             </div>
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
               {p.speedKmph} km/h &middot; {p.vehicleStatus}
             </div>
           </div>
