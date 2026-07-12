@@ -1,0 +1,53 @@
+{
+  "name": "@transitops/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:rollback": "drizzle-kit drop",
+    "seed": "tsx src/db/seed.ts",
+    "openapi:gen": "tsx src/scripts/generate-openapi.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "cors": "^2.8.5",
+    "compression": "^1.7.5",
+    "express-rate-limit": "^7.5.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "zod": "^3.24.1",
+    "drizzle-orm": "^0.39.0",
+    "postgres": "^3.4.5",
+    "ioredis": "^5.4.2",
+    "bullmq": "^5.41.0",
+    "argon2": "^0.41.1",
+    "jsonwebtoken": "^9.0.2",
+    "otplib": "^12.0.1",
+    "uuid": "^11.0.5",
+    "minio": "^8.0.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/compression": "^1.7.5",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/uuid": "^10.0.0",
+    "drizzle-kit": "^0.30.5",
+    "tsx": "^4.19.2",
+    "vitest": "^3.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "testcontainers": "^10.16.0",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2",
+    "typescript": "~5.7.3",
+    "@types/node": "^22.12.0"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "app": {
+    "title": "TransitOps",
+    "loading": "Loading..."
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "noResults": "No results found",
+    "confirm": "Confirm",
+    "back": "Back"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "vehicles": "Vehicles",
+    "drivers": "Drivers",
+    "trips": "Trips",
+    "maintenance": "Maintenance",
+    "fuel": "Fuel & Expense",
+    "reports": "Reports",
+    "users": "Users",
+    "settings": "Settings",
+    "auditLog": "Audit Log",
+    "notifications": "Notifications"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "offline": "You are offline. Changes will be synced when you reconnect.",
+    "unauthorized": "You do not have permission to perform this action.",
+    "notFound": "The requested resource was not found."
+  }
+}

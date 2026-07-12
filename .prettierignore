@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.turbo
+pnpm-lock.yaml
+openapi.yaml
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+.env.local

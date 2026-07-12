@@ -1,0 +1,39 @@
+{
+  "name": "transitops",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TransitOps — Intelligent Fleet Operations ERP",
+  "scripts": {
+    "dev": "pnpm --parallel -r run dev",
+    "build": "pnpm -r run build",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "test:e2e": "pnpm --filter @transitops/web run test:e2e",
+    "test:a11y": "pnpm --filter @transitops/web run test:a11y",
+    "db:up": "docker compose -f apps/api/docker-compose.yml up -d",
+    "db:down": "docker compose -f apps/api/docker-compose.yml down",
+    "db:migrate": "pnpm --filter @transitops/api run db:migrate",
+    "db:rollback": "pnpm --filter @transitops/api run db:rollback",
+    "db:generate": "pnpm --filter @transitops/api run db:generate",
+    "seed": "pnpm --filter @transitops/api run seed",
+    "openapi:gen": "pnpm --filter @transitops/api run openapi:gen",
+    "openapi:check": "pnpm --filter @transitops/web run openapi:check",
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "prettier": "^3.9.5",
+    "typescript-eslint": "^8.63.0"
+  }
+}
