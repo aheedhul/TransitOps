@@ -541,3 +541,28 @@ export const notificationRecipients = pgTable(
     check('chk_notif_push_state', sql`${table.pushState} is null or ${table.pushState} in ('pending','sent','failed','skipped')`),
   ],
 );
+
+// ============================================================
+// Phase 4 — Offline Sync
+// ============================================================
+
+export const syncIdempotency = pgTable(
+  'sync_idempotency',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    idempotencyKey: text('idempotency_key').notNull().unique(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    mutationType: text('mutation_type').notNull(),
+    entityId: uuid('entity_id'),
+    status: text('status').notNull(),
+    result: jsonb('result'),
+    error: jsonb('error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_sync_idempotency_key').on(table.idempotencyKey),
+    index('idx_sync_idempotency_org').on(table.organizationId, table.createdAt.desc()),
+  ],
+);

@@ -16,6 +16,7 @@ import maintenanceRoutes from './modules/maintenance/routes.js';
 import fuelRoutes from './modules/fuel/routes.js';
 import expenseRoutes from './modules/expenses/routes.js';
 import notificationRoutes from './modules/notifications/routes.js';
+import syncRoutes from './modules/sync/routes.js';
 
 export function createServer(): Express {
   const app = express();
@@ -60,6 +61,7 @@ export function createServer(): Express {
   app.use('/api/v1', fuelRoutes);
   app.use('/api/v1', expenseRoutes);
   app.use('/api/v1', notificationRoutes);
+  app.use('/api/v1', syncRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({

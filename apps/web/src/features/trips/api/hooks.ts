@@ -9,6 +9,7 @@ import type {
   DispatchCheckResponse,
   DispatchRecommendationResponse,
 } from './types.js';
+import { enqueueMutation } from '../../offline/sync-engine.js';
 
 export function useTrips(page = 1) {
   return useQuery<PaginatedResponse<TripResponse>>({
@@ -62,6 +63,9 @@ export function useDispatchTrip() {
   return useMutation({
     mutationFn: ({ id, ...input }: { id: string } & DispatchTripInput) =>
       api.post<SingleResponse<TripResponse>>(`/trips/${id}/dispatch`, input),
+    onMutate: async ({ id, ...input }) => {
+      await enqueueMutation('trip.dispatch', id, input);
+    },
     onSuccess: (_, { id }) => {
       client.invalidateQueries({ queryKey: ['trips'] });
       client.invalidateQueries({ queryKey: ['trips', id] });
@@ -71,12 +75,20 @@ export function useDispatchTrip() {
 
 export function useStartTrip() {
   const client = useQueryClient();
+  const keyRef = { current: '' };
+
   return useMutation({
     mutationFn: ({ id, ...input }: { id: string; lat?: number; lng?: number; odometerKm?: number }) =>
       api.post<SingleResponse<TripResponse>>(`/trips/${id}/start`, input),
+    onMutate: async ({ id, ...input }) => {
+      keyRef.current = await enqueueMutation('trip.start', id, input);
+    },
     onSuccess: (_, { id }) => {
       client.invalidateQueries({ queryKey: ['trips'] });
       client.invalidateQueries({ queryKey: ['trips', id] });
+    },
+    onError: () => {
+      keyRef.current = '';
     },
   });
 }
@@ -93,6 +105,9 @@ export function useCompleteTrip() {
       fuelConsumedL: number;
       actualTravelMins?: number;
     }) => api.post<SingleResponse<TripResponse>>(`/trips/${id}/complete`, input),
+    onMutate: async ({ id, ...input }) => {
+      await enqueueMutation('trip.complete', id, input);
+    },
     onSuccess: (_, { id }) => {
       client.invalidateQueries({ queryKey: ['trips'] });
       client.invalidateQueries({ queryKey: ['trips', id] });
@@ -110,6 +125,9 @@ export function useCancelTrip() {
       id: string;
       cancelReason: 'customer' | 'vehicle_breakdown' | 'weather' | 'compliance' | 'duplicate' | 'other';
     }) => api.post<SingleResponse<TripResponse>>(`/trips/${id}/cancel`, input),
+    onMutate: async ({ id, ...input }) => {
+      await enqueueMutation('trip.cancel', id, input);
+    },
     onSuccess: (_, { id }) => {
       client.invalidateQueries({ queryKey: ['trips'] });
       client.invalidateQueries({ queryKey: ['trips', id] });
