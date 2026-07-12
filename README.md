@@ -1,4 +1,4 @@
-# TransitOps — Smart Transport Operations Platform
+# TransitOps - Smart Transport Operations Platform
 
 **Hackathon Project | 8 Hours | 5-Persona Fleet ERP**
 
@@ -168,7 +168,3 @@ transitops/
 Copy `.env.example` to `.env.local`. Required: `DATABASE_URL` (Supabase connection string). All other keys (LLM, Maps, Push) are optional — the system degrades gracefully without them.
 
 ---
-
-## 📝 Git History
-
-13+ conventional commits across 8 phases: scaffolding → auth → CRUD → trips → operations → offline → intelligence → telematics → polish → hardening.
