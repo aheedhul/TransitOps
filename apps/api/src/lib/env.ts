@@ -1,4 +1,23 @@
 import { z } from 'zod';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Load .env.local from repo root if it exists (local dev only)
+try {
+  const envPath = join(process.cwd(), '../../.env.local');
+  const content = readFileSync(envPath, 'utf-8');
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const value = trimmed.slice(eqIdx + 1).trim();
+    process.env[key] ??= value;
+  }
+} catch {
+  // .env.local not found — fine in CI/production
+}
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

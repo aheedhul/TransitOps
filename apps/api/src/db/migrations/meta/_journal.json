@@ -8,6 +8,13 @@
       "when": 1783836893052,
       "tag": "0000_bent_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783839433403,
+      "tag": "0001_hot_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

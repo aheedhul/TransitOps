@@ -3,8 +3,10 @@ import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 import { logger } from './lib/logger.js';
 import { env } from './lib/env.js';
+import authRoutes from './modules/auth/routes.js';
 
 export function createServer(): Express {
   const app = express();
@@ -20,6 +22,7 @@ export function createServer(): Express {
   );
   app.use(compression());
   app.use(express.json({ limit: '1mb' }));
+  app.use(cookieParser());
 
   app.use(
     rateLimit({
@@ -37,6 +40,8 @@ export function createServer(): Express {
   app.get('/readyz', (_req, res) => {
     res.json({ status: 'ok', uptime: process.uptime() });
   });
+
+  app.use('/api/v1', authRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({
