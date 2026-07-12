@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Fuel, Plus, Droplet, IndianRupee, TrendingUp, Calendar, type LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../features/auth/store.js';
 import { PageHeader, EmptyState } from '../components/ui/empty-state.js';
@@ -9,16 +9,7 @@ import { Card } from '../components/ui/card.js';
 import { StatCard, StatSkeleton } from '../components/ui/stat-card.js';
 import { Spinner } from '../components/ui/spinner.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table.js';
-
-interface FuelLog {
-  id: string;
-  liters: string;
-  cost: string;
-  odometerKm: string;
-  fuelType: string;
-  filledAt: string;
-  vehicleName?: string;
-}
+import { NewFuelLogModal, type FuelLog } from '../features/logs/index.js';
 
 export const Route = createFileRoute('/_authenticated/fuel')({
   component: FuelPage,
@@ -29,15 +20,30 @@ function FuelPage() {
   const session = useAuthStore((s) => s.session);
   const [logs, setLogs] = useState<FuelLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const fetchLogs = useCallback(async () => {
+    if (!session) return;
+    try {
+      const res = await fetch('/api/v1/fuel-logs', {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+      const d = (await res.json()) as { data?: FuelLog[] };
+      setLogs(d.data ?? []);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
-    if (!session) return;
-    fetch('/api/v1/fuel-logs', { headers: { Authorization: `Bearer ${session.accessToken}` } })
-      .then((r) => r.json())
-      .then((d) => setLogs(d.data ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [session]);
+    void fetchLogs();
+  }, [fetchLogs]);
+
+  const handleCreated = (log: FuelLog) => {
+    setLogs((prev) => [log, ...prev]);
+  };
 
   const totalCost = logs.reduce((s, l) => s + parseFloat(l.cost), 0);
   const totalLiters = logs.reduce((s, l) => s + parseFloat(l.liters), 0);
@@ -48,7 +54,11 @@ function FuelPage() {
       <PageHeader
         title={t('nav.fuel')}
         description={`${logs.length} fuel logs. Track consumption, cost per liter, and odometer readings.`}
-        actions={<Button leftIcon={<Plus className="h-3.5 w-3.5" />}>New Log</Button>}
+        actions={
+          <Button leftIcon={<Plus className="h-3.5 w-3.5" />} onClick={() => setModalOpen(true)}>
+            New Log
+          </Button>
+        }
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -101,7 +111,11 @@ function FuelPage() {
           icon={<Fuel className="h-5 w-5" />}
           title="No fuel logs yet"
           description="Record your first fuel fill-up to start tracking consumption and costs."
-          action={<Button leftIcon={<Plus className="h-3.5 w-3.5" />}>New Log</Button>}
+          action={
+            <Button leftIcon={<Plus className="h-3.5 w-3.5" />} onClick={() => setModalOpen(true)}>
+              New Log
+            </Button>
+          }
         />
       ) : (
         <Table>
@@ -149,6 +163,12 @@ function FuelPage() {
           </TableBody>
         </Table>
       )}
+
+      <NewFuelLogModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onCreated={handleCreated}
+      />
     </div>
   );
 }

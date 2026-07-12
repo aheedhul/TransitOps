@@ -154,6 +154,8 @@ router.post(
         input.plannedDepartureAt,
         input.force,
         input.overrideReason,
+        input.sourceLabel,
+        input.destinationLabel,
       );
       res.json({ data: result });
     } catch (err) {

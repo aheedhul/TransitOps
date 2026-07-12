@@ -83,6 +83,8 @@ export interface DispatchCheckInput {
   plannedDepartureAt?: string;
   force?: boolean;
   overrideReason?: 'customer' | 'capacity_tolerance' | 'license_warn';
+  sourceLabel?: string;
+  destinationLabel?: string;
 }
 
 export interface DispatchRecommendationResponse {

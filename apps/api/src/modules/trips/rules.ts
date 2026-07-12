@@ -22,6 +22,8 @@ interface ValidateDispatchInput {
   hasPreTripInspection: boolean;
   force: boolean;
   overrideReason?: string;
+  sourceLabel?: string;
+  destinationLabel?: string;
 }
 
 /**
@@ -186,6 +188,24 @@ export function validateDispatch(input: ValidateDispatchInput): RuleResult[] {
       : 'Pre-trip inspection completed',
     field: 'vehicleId',
     severity: 'warn',
+  });
+
+  // R11: route.distinct (source and destination must differ)
+  const source = (input.sourceLabel ?? '').trim().toLowerCase();
+  const destination = (input.destinationLabel ?? '').trim().toLowerCase();
+  const routeDistinct =
+    source.length > 0 && destination.length > 0 && source !== destination;
+  chain.push({
+    rule: 'route.distinct',
+    ok: routeDistinct,
+    reason: !routeDistinct ? 'route.same_source_destination' : undefined,
+    message: !routeDistinct
+      ? source.length === 0 || destination.length === 0
+        ? 'Source and destination are required'
+        : 'Source and destination must be different'
+      : 'Source and destination are different',
+    field: 'sourceLabel',
+    severity: 'block',
   });
 
   return chain;

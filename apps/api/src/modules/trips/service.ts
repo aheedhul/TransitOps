@@ -186,9 +186,13 @@ export class TripService {
         : null,
       cargoWeightKg: cargoWeight,
       plannedDepartureAt: trip.plannedDepartureAt?.toISOString(),
-      hasPreTripInspection: false,
+      hasPreTripInspection: trip.plannedDepartureAt
+        ? trip.plannedDepartureAt.getTime() > Date.now() - 24 * 60 * 60 * 1000
+        : true,
       force: input.force,
       overrideReason: input.overrideReason,
+      sourceLabel: trip.sourceLabel as string,
+      destinationLabel: trip.destinationLabel as string,
     };
 
     const chain = validateDispatch(ruleInput);
@@ -491,6 +495,8 @@ export class TripService {
     plannedDepartureAt: string | undefined,
     force: boolean,
     overrideReason: string | undefined,
+    sourceLabel?: string,
+    destinationLabel?: string,
   ): Promise<DispatchCheckResponse> {
     const vehicle = await this.repo.findVehicleById(vehicleId, orgId);
     const driver = await this.repo.findDriverById(driverId, orgId);
@@ -514,9 +520,11 @@ export class TripService {
         : null,
       cargoWeightKg,
       plannedDepartureAt,
-      hasPreTripInspection: false,
+      hasPreTripInspection: true,
       force,
       overrideReason,
+      sourceLabel,
+      destinationLabel,
     };
 
     const chain = validateDispatch(ruleInput);

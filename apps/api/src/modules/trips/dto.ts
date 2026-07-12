@@ -88,6 +88,8 @@ export const dispatchCheckSchema = z.object({
   plannedDepartureAt: z.string().datetime().optional(),
   force: z.boolean().default(false),
   overrideReason: z.enum(OVERRIDE_REASONS).optional(),
+  sourceLabel: z.string().min(1).max(200).optional(),
+  destinationLabel: z.string().min(1).max(200).optional(),
 });
 
 export const dispatchRecommendationSchema = z.object({

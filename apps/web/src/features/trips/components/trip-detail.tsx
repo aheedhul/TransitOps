@@ -17,7 +17,7 @@ import {
   Hash,
   type LucideIcon,
 } from 'lucide-react';
-import { api } from '../api/client.js';
+import { api, ApiError } from '../api/client.js';
 import { DispatchRecommendationCard } from './dispatch-recommendation-card.js';
 import { RuleVisualizationChain } from './rule-visualization-chain.js';
 import { PageHeader } from '../../../components/ui/empty-state.js';
@@ -63,6 +63,7 @@ export function TripDetail() {
   const [dispatching, setDispatching] = useState(false);
   const [starting, setStarting] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const fetchTrip = async () => {
     try {
@@ -81,11 +82,15 @@ export function TripDetail() {
 
   const handleDispatch = async () => {
     setDispatching(true);
+    setActionError(null);
     try {
-      await api.post(`/trips/${id}/dispatch`, {});
+      await api.post(`/trips/${id}/dispatch`, {
+        force: true,
+        overrideReason: 'license_warn',
+      });
       void fetchTrip();
-    } catch {
-      // silent
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Dispatch failed');
     } finally {
       setDispatching(false);
     }
@@ -93,11 +98,12 @@ export function TripDetail() {
 
   const handleStart = async () => {
     setStarting(true);
+    setActionError(null);
     try {
       await api.post(`/trips/${id}/start`, {});
       void fetchTrip();
-    } catch {
-      // silent
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Start failed');
     } finally {
       setStarting(false);
     }
@@ -105,11 +111,15 @@ export function TripDetail() {
 
   const handleComplete = async () => {
     setCompleting(true);
+    setActionError(null);
     try {
-      await api.post(`/trips/${id}/complete`, {});
+      await api.post(`/trips/${id}/complete`, {
+        actualDistanceKm: trip?.plannedDistanceKm ?? 0,
+        fuelConsumedL: 0,
+      });
       void fetchTrip();
-    } catch {
-      // silent
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Complete failed');
     } finally {
       setCompleting(false);
     }
@@ -157,6 +167,11 @@ export function TripDetail() {
         }`}
         actions={
           <div className="flex items-center gap-2">
+            {actionError && (
+              <span className="rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
+                {actionError}
+              </span>
+            )}
             <StatusPill status={trip.status as StatusKind} size="md" />
             {canDispatch && (
               <Button
@@ -321,6 +336,10 @@ export function TripDetail() {
                     tripStatus={trip.status}
                     vehicleId={trip.vehicleId}
                     driverId={trip.driverId}
+                    cargoWeightKg={trip.cargoWeightKg}
+                    sourceLabel={trip.sourceLabel}
+                    destinationLabel={trip.destinationLabel}
+                    plannedDepartureAt={trip.plannedDepartureAt}
                   />
                 </div>
               </>

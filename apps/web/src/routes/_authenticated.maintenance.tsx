@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Wrench, Plus, IndianRupee, Building2, FileText } from 'lucide-react';
 import { useAuthStore } from '../features/auth/store.js';
 import { PageHeader, EmptyState } from '../components/ui/empty-state.js';
@@ -10,15 +10,7 @@ import { StatCard, StatSkeleton } from '../components/ui/stat-card.js';
 import { StatusPill, type StatusKind } from '../components/ui/status-pill.js';
 import { Spinner } from '../components/ui/spinner.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table.js';
-
-interface MaintLog {
-  id: string;
-  type: string;
-  description: string;
-  cost: string;
-  status: string;
-  vendor: string;
-}
+import { NewMaintenanceLogModal, type MaintenanceLog } from '../features/logs/index.js';
 
 export const Route = createFileRoute('/_authenticated/maintenance')({
   component: MaintenancePage,
@@ -27,19 +19,32 @@ export const Route = createFileRoute('/_authenticated/maintenance')({
 function MaintenancePage() {
   const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
-  const [logs, setLogs] = useState<MaintLog[]>([]);
+  const [logs, setLogs] = useState<MaintenanceLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const fetchLogs = useCallback(async () => {
+    if (!session) return;
+    try {
+      const res = await fetch('/api/v1/maintenance', {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+      const d = (await res.json()) as { data?: MaintenanceLog[] };
+      setLogs(d.data ?? []);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
-    if (!session) return;
-    fetch('/api/v1/maintenance', {
-      headers: { Authorization: `Bearer ${session.accessToken}` },
-    })
-      .then((r) => r.json())
-      .then((d) => setLogs(d.data ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [session]);
+    void fetchLogs();
+  }, [fetchLogs]);
+
+  const handleCreated = (log: MaintenanceLog) => {
+    setLogs((prev) => [log, ...prev]);
+  };
 
   const activeCount = logs.filter((l) => l.status === 'active').length;
   const totalCost = logs.reduce((s, l) => s + parseFloat(l.cost), 0);
@@ -51,7 +56,9 @@ function MaintenancePage() {
         title={t('nav.maintenance')}
         description={`${logs.length} maintenance records. Track repairs, services, and vendor costs.`}
         actions={
-          <Button leftIcon={<Plus className="h-3.5 w-3.5" />}>New Log</Button>
+          <Button leftIcon={<Plus className="h-3.5 w-3.5" />} onClick={() => setModalOpen(true)}>
+            New Log
+          </Button>
         }
       />
 
@@ -85,7 +92,11 @@ function MaintenancePage() {
           icon={<Wrench className="h-5 w-5" />}
           title="No maintenance records"
           description="Record your first maintenance event to start tracking vehicle health."
-          action={<Button leftIcon={<Plus className="h-3.5 w-3.5" />}>New Log</Button>}
+          action={
+            <Button leftIcon={<Plus className="h-3.5 w-3.5" />} onClick={() => setModalOpen(true)}>
+              New Log
+            </Button>
+          }
         />
       ) : (
         <Table>
@@ -131,6 +142,12 @@ function MaintenancePage() {
           </TableBody>
         </Table>
       )}
+
+      <NewMaintenanceLogModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onCreated={handleCreated}
+      />
     </div>
   );
 }
