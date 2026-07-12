@@ -225,8 +225,9 @@ router.get('/reports/emissions', requireAuth, requireCapability('reports.read'),
 router.get('/reports/utilization', requireAuth, requireCapability('reports.read'), async (req, res) => {
   try {
     const orgId = getActor(req).orgId;
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const periodDays = 30;
+    const periodStart = new Date();
+    periodStart.setDate(periodStart.getDate() - periodDays);
 
     const vehicleList = await db
       .select()
@@ -244,25 +245,24 @@ router.get('/reports/utilization', requireAuth, requireCapability('reports.read'
             eq(trips.vehicleId, v.id),
             eq(trips.organizationId, orgId),
             isNull(trips.deletedAt),
-            gte(trips.completedAt, thirtyDaysAgo),
+            gte(trips.completedAt, periodStart),
           ),
         );
-
-      const activeDays = new Set(
-        tripRows
-          .filter((t) => t.dispatchedAt)
-          .map((t) => new Date(t.dispatchedAt as unknown as string).toDateString()),
-      ).size;
-
-      const utilPct = Math.round((activeDays / 30) * 100);
 
       results.push({
         vehicle_id: v.id,
         registration: v.registrationNumber,
         type: v.type,
-        utilization_pct: utilPct,
+        utilization_pct: 0,
         trip_count: tripRows.length,
+        raw_trips: tripRows.length,
       });
+    }
+
+    const maxTrips = Math.max(...results.map((r) => r.raw_trips), 1);
+    for (const r of results) {
+      r.utilization_pct = Math.round((r.raw_trips / maxTrips) * 100);
+      delete (r as Record<string, unknown>).raw_trips;
     }
 
     results.sort((a, b) => b.utilization_pct - a.utilization_pct);
