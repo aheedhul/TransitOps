@@ -18,6 +18,8 @@ import expenseRoutes from './modules/expenses/routes.js';
 import notificationRoutes from './modules/notifications/routes.js';
 import syncRoutes from './modules/sync/routes.js';
 import reportsRoutes from './modules/reports/routes.js';
+import telematicsRoutes from './modules/telematics/routes.js';
+import geofenceRoutes from './modules/geofences/routes.js';
 
 export function createServer(): Express {
   const app = express();
@@ -64,6 +66,8 @@ export function createServer(): Express {
   app.use('/api/v1', notificationRoutes);
   app.use('/api/v1', syncRoutes);
   app.use('/api/v1', reportsRoutes);
+  app.use('/api/v1', telematicsRoutes);
+  app.use('/api/v1', geofenceRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({

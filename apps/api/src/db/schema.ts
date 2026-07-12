@@ -665,6 +665,89 @@ export const emissionsFactors = pgTable(
 );
 
 // ============================================================
+// Phase 6 — Telematics
+// ============================================================
+
+export const vehicleLocations = pgTable(
+  'vehicle_locations',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    lat: numeric('lat', { precision: 9, scale: 6 }).notNull(),
+    lng: numeric('lng', { precision: 9, scale: 6 }).notNull(),
+    heading: numeric('heading', { precision: 5, scale: 1 }),
+    speedKmph: numeric('speed_kmph', { precision: 6, scale: 1 }).notNull().default('0'),
+    odometerKm: numeric('odometer_km', { precision: 10, scale: 2 }),
+    source: text('source').notNull().default('device'),
+    tripId: uuid('trip_id').references(() => trips.id),
+    recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_vehicle_locations_vehicle').on(table.vehicleId, table.recordedAt.desc()),
+    index('idx_vehicle_locations_trip').on(table.tripId, table.recordedAt.desc()),
+    index('idx_vehicle_locations_recent').on(table.vehicleId, table.recordedAt.desc()).where(sql`${table.recordedAt} > now() - interval '24 hours'`),
+    check('chk_location_source', sql`${table.source} in ('device','pwa','simulator','manual')`),
+  ],
+);
+
+export const geofences = pgTable(
+  'geofences',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    name: text('name').notNull(),
+    kind: text('kind').notNull().default('depot'),
+    geometryType: text('geometry_type').notNull().default('polygon'),
+    geometry: jsonb('geometry').notNull(),
+    radiusMeters: numeric('radius_meters', { precision: 8, scale: 1 }),
+    centerLat: numeric('center_lat', { precision: 9, scale: 6 }),
+    centerLng: numeric('center_lng', { precision: 9, scale: 6 }),
+    rules: jsonb('rules').notNull().default(sql`'{}'::jsonb`),
+    active: text('active').notNull().default('true'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_geofences_org').on(table.organizationId, table.kind).where(sql`${table.deletedAt} is null`),
+    check('chk_geofence_kind', sql`${table.kind} in ('depot','yard','customer','restricted','charging','other')`),
+    check('chk_geofence_geometry_type', sql`${table.geometryType} in ('polygon','radius','bbox')`),
+    check('chk_geofence_active', sql`${table.active} in ('true','false')`),
+  ],
+);
+
+export const geofenceEvents = pgTable(
+  'geofence_events',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    geofenceId: uuid('geofence_id')
+      .notNull()
+      .references(() => geofences.id),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    eventType: text('event_type').notNull(),
+    lat: numeric('lat', { precision: 9, scale: 6 }).notNull(),
+    lng: numeric('lng', { precision: 9, scale: 6 }).notNull(),
+    locationId: uuid('location_id').references(() => vehicleLocations.id),
+    distanceMeters: numeric('distance_meters', { precision: 8, scale: 1 }),
+    dwellMinutes: numeric('dwell_minutes', { precision: 6, scale: 1 }),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_geofence_events_geofence').on(table.geofenceId, table.occurredAt.desc()),
+    index('idx_geofence_events_vehicle').on(table.vehicleId, table.occurredAt.desc()),
+    check('chk_geofence_event_type', sql`${table.eventType} in ('enter','exit','dwell','idle','unauthorized_stop','entry_denied')`),
+  ],
+);
+
+// ============================================================
 // Phase 5 — Settings
 // ============================================================
 

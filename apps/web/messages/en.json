@@ -23,6 +23,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "map": "Fleet Map",
     "vehicles": "Vehicles",
     "drivers": "Drivers",
     "trips": "Trips",

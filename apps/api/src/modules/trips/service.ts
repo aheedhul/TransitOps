@@ -20,6 +20,7 @@ import type {
 import { publish, createEvent } from '../../lib/events/bus.js';
 import { TOPICS } from '../../lib/events/topics.js';
 import { getMapsAdapter } from '../../lib/maps/adapter.js';
+import { TelematicsRepository } from '../telematics/repository.js';
 
 export class TripService {
   constructor(private readonly repo: TripRepository = new TripRepository()) {}
@@ -292,6 +293,43 @@ export class TripService {
       recordedBy: actorId,
       payload: { lat: input.lat, lng: input.lng, note: input.note ?? null },
     });
+
+    if (trip.vehicleId) {
+      const telemetryRepo = new TelematicsRepository();
+      const now = new Date();
+      await telemetryRepo.insert({
+        vehicleId: trip.vehicleId as string,
+        lat: input.lat,
+        lng: input.lng,
+        speedKmph: 0,
+        odometerKm: input.odometerKm ?? undefined,
+        source: 'pwa',
+        tripId: id,
+        recordedAt: now,
+      });
+
+      if (input.odometerKm !== undefined) {
+        void telemetryRepo.updateVehicleOdometer(trip.vehicleId as string, input.odometerKm);
+      }
+
+      void publish(
+        createEvent(TOPICS.VEHICLE_POSITION_UPDATED, {
+          actorId,
+          organizationId: orgId,
+          entityType: 'vehicle_location',
+          entityId: trip.vehicleId as string,
+          payload: {
+            vehicleId: trip.vehicleId,
+            lat: input.lat,
+            lng: input.lng,
+            speedKmph: 0,
+            odometerKm: input.odometerKm,
+            source: 'pwa',
+            tripId: id,
+          },
+        }),
+      );
+    }
 
     void publish(
       createEvent(TOPICS.TRIP_CHECKPOINT_ADDED, {

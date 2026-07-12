@@ -50,4 +50,15 @@ export const TOPICS = {
   DRIVER_SCORE_COMPUTED: 'driver.score.computed',
   CO2_EMISSION_RECORDED: 'co2.emission.recorded',
   COPILOT_VIEWED: 'copilot.viewed',
+
+  VEHICLE_POSITION_UPDATED: 'vehicle.position.updated',
+  TRIP_ETA_CHANGED: 'trip.eta.changed',
+
+  GEOFENCE_CREATED: 'geofence.created',
+  GEOFENCE_UPDATED: 'geofence.updated',
+  GEOFENCE_DELETED: 'geofence.deleted',
+  GEOFENCE_ENTERED: 'geofence.entered',
+  GEOFENCE_EXITED: 'geofence.exited',
+  GEOFENCE_DWELL: 'geofence.dwell',
+  GEOFENCE_VIOLATION: 'geofence.violation',
 } as const;

@@ -95,4 +95,11 @@ const CAPABILITIES: Record<string, string[]> = {
   'notifications.read': ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'],
   'notifications.send.test': ['admin'],
   'dashboard.realtime.subscribe': ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'],
+  'telematics.ingest': ['admin', 'fleet_manager', 'driver'],
+  'telematics.read': ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'],
+  'geofence.read': ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'],
+  'geofence.create': ['admin', 'fleet_manager'],
+  'geofence.update': ['admin', 'fleet_manager'],
+  'geofence.delete': ['admin'],
+  'map.read': ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'],
 };
