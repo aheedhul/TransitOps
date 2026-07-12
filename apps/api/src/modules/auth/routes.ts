@@ -2,7 +2,8 @@ import { Router, type Router as RouterType, type Request } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AuthService, AuthError } from './service.js';
 import { loginSchema, refreshSchema, logoutSchema, verifyMfaSchema } from './dto.js';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, requireCapability } from '../../middleware/auth.js';
+import { getActor } from '../../lib/request.js';
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -194,6 +195,11 @@ router.post('/auth/mfa/verify', requireAuth, async (req, res) => {
     }
     throw err;
   }
+});
+
+router.get('/users', requireAuth, requireCapability('users.manage'), async (req, res) => {
+  const users = await authService.listUsers(getActor(req).orgId);
+  res.json({ data: users });
 });
 
 export default router;

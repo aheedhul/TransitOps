@@ -95,4 +95,12 @@ export class AuthRepository {
       .set({ mfaSecret, mfaRecoveryCodes: recoveryCodes })
       .where(eq(users.id, userId));
   }
+
+  async listUsers(orgId: string) {
+    return this.database
+      .select()
+      .from(users)
+      .where(and(eq(users.organizationId, orgId), isNull(users.deletedAt)))
+      .orderBy(users.createdAt);
+  }
 }

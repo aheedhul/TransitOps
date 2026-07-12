@@ -170,6 +170,17 @@ export class AuthService {
       throw new AuthError('INVALID_MFA', 'Invalid MFA code');
     }
   }
+  async listUsers(orgId: string) {
+    const users = await this.repo.listUsers(orgId);
+    return users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      status: u.status,
+      lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
+    }));
+  }
 }
 
 export class AuthError extends Error {

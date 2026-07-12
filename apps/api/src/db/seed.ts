@@ -347,6 +347,19 @@ async function seed() {
       `;
     }
 
+    logger.info('seeding vehicle locations...');
+    for (let i = 0; i < vehicleIds.length; i++) {
+      const v = VEHICLES[i]!;
+      if (v.status === 'retired') continue;
+      const lat = 13.0 + (Math.random() - 0.3) * 0.2;
+      const lng = 77.55 + Math.random() * 0.2;
+      await sql`
+        INSERT INTO vehicle_locations (id, vehicle_id, lat, lng, heading, speed_kmph, odometer_km, source, recorded_at)
+        VALUES (${uid(`loc-${i}`)}, ${vehicleIds[i]!}, ${lat.toFixed(6)}, ${lng.toFixed(6)}, ${Math.floor(Math.random() * 360)}, ${Math.floor(Math.random() * 60)}, ${v.odometer}, 'device', ${new Date()})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+
     logger.info('seeding notifications...');
     const notifs = [
       { type: 'license_expiring', priority: 'orange', title: 'License Expiring Soon', message: `Driver Sunil Shetty (DL-KA-2019-7890123) license expires on 2024-07-01.`, role: 'safety_officer' },
