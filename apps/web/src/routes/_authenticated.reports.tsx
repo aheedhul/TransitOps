@@ -1,10 +1,29 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  Download,
+  Truck,
+  Activity,
+  Users,
+  IndianRupee,
+  Leaf,
+  Gauge,
+  TrendingUp,
+  AlertCircle,
+  Info,
+  type LucideIcon,
+} from 'lucide-react';
 import { useAuthStore } from '../features/auth/store.js';
+import { PageHeader } from '../components/ui/empty-state.js';
+import { Button } from '../components/ui/button.js';
+import { Section } from '../components/ui/card.js';
+import { Tabs } from '../components/ui/tabs.js';
+import { StatCard, StatSkeleton } from '../components/ui/stat-card.js';
+import { ErrorState } from '../components/ui/spinner.js';
+import { cn } from '../lib/utils.js';
 
 type Tab = 'fleet' | 'financial' | 'esg' | 'utilization';
-
 const API_BASE = '/api/v1';
 
 async function apiGet<T>(path: string): Promise<T> {
@@ -66,23 +85,37 @@ interface UtilizationItem {
   trip_count: number;
 }
 
-function KpiCard({ label, value, unit, tooltip }: { label: string; value: string | number; unit?: string; tooltip?: string }) {
+function KpiCard({
+  label,
+  value,
+  unit,
+  tooltip,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  unit?: string;
+  tooltip?: string;
+  icon?: LucideIcon;
+  accent?: 'primary' | 'success' | 'warning' | 'destructive' | 'info';
+}) {
   return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm group relative">
-      <div className="flex items-center gap-1">
-        <span className="text-sm text-muted-foreground">{label}</span>
+    <div className="group relative">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {Icon && <Icon className="h-3 w-3" />}
+        <span className="font-medium">{label}</span>
         {tooltip && (
-          <span className="relative">
-            <span className="cursor-help text-muted-foreground/50 text-xs" aria-label={tooltip}>&#9432;</span>
-            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-56 rounded-md bg-foreground px-3 py-2 text-xs text-background opacity-0 transition-opacity group-hover:opacity-100 z-50">
+          <span className="relative inline-flex">
+            <Info className="h-3 w-3 cursor-help text-muted-foreground/50" />
+            <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground opacity-0 shadow-floating transition-opacity group-hover:opacity-100">
               {tooltip}
             </span>
           </span>
         )}
       </div>
-      <div className="mt-1 text-2xl font-bold">
-        {value}
-        {unit && <span className="ml-1 text-sm font-normal text-muted-foreground">{unit}</span>}
+      <div className="mt-1.5 flex items-baseline gap-1">
+        <span className="text-2xl font-bold tracking-tight">{value}</span>
+        {unit && <span className="text-sm font-normal text-muted-foreground">{unit}</span>}
       </div>
     </div>
   );
@@ -106,14 +139,15 @@ function DownloadButton({ reportType }: { reportType: string }) {
     a.click();
     URL.revokeObjectURL(url);
   };
-
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
+      leftIcon={<Download className="h-3.5 w-3.5" />}
       onClick={handleDownload}
-      className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent"
     >
       {t('common.downloadCsv')}
-    </button>
+    </Button>
   );
 }
 
@@ -143,36 +177,98 @@ function FleetTab() {
   const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<FleetKPIs>('/reports/fleet-kpis');
 
-  if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('common.loading')}</div>;
-  if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data) return <div className="py-8 text-center text-muted-foreground">{t('reports.noData')}</div>;
+  useEffect(() => {
+    if (!data && !loading) void fetchData();
+  }, [data, loading, fetchData]);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <StatSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+  if (error) return <ErrorState title="Failed to load" message={error} />;
+  if (!data) return null;
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t('reports.fleetKpis')}</h2>
-        <DownloadButton reportType="fleet-kpis" />
-      </div>
+    <div className="space-y-6">
+      <Section
+        title={t('reports.fleetKpis')}
+        description="30-day operational metrics"
+        actions={<DownloadButton reportType="fleet-kpis" />}
+      >
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <KpiCard label={t('reports.totalVehicles')} value={data.total_vehicles} tooltip={t('metrics.totalVehicles')} icon={Truck} accent="primary" />
+          <KpiCard label={t('reports.available')} value={data.available_vehicles} tooltip={t('metrics.available')} icon={Truck} accent="success" />
+          <KpiCard label={t('reports.inMaintenance')} value={data.in_maintenance} tooltip={t('metrics.inMaintenance')} icon={Truck} accent="warning" />
+          <KpiCard label={t('reports.onTrip')} value={data.on_trip} tooltip={t('metrics.onTrip')} icon={Truck} accent="info" />
+          <KpiCard label={t('reports.activeTrips')} value={data.active_trips} tooltip={t('metrics.activeTrips')} icon={Activity} accent="info" />
+          <KpiCard label={t('reports.pendingTrips')} value={data.pending_trips} tooltip={t('metrics.pendingTrips')} icon={Activity} accent="warning" />
+          <KpiCard label={t('reports.driversOnDuty')} value={data.drivers_on_duty} tooltip={t('metrics.driversOnDuty')} icon={Users} accent="primary" />
+          <KpiCard label={t('reports.completed30d')} value={data.completed_trips_30d} unit={t('trips.title').toLowerCase()} tooltip={t('metrics.completed30d')} icon={Activity} accent="success" />
+        </div>
+      </Section>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label={t('reports.totalVehicles')} value={data.total_vehicles} tooltip={t('metrics.totalVehicles')} />
-        <KpiCard label={t('reports.available')} value={data.available_vehicles} tooltip={t('metrics.available')} />
-        <KpiCard label={t('reports.inMaintenance')} value={data.in_maintenance} tooltip={t('metrics.inMaintenance')} />
-        <KpiCard label={t('reports.onTrip')} value={data.on_trip} tooltip={t('metrics.onTrip')} />
-        <KpiCard label={t('reports.activeTrips')} value={data.active_trips} tooltip={t('metrics.activeTrips')} />
-        <KpiCard label={t('reports.pendingTrips')} value={data.pending_trips} tooltip={t('metrics.pendingTrips')} />
-        <KpiCard label={t('reports.driversOnDuty')} value={data.drivers_on_duty} tooltip={t('metrics.driversOnDuty')} />
-        <KpiCard label={t('reports.completed30d')} value={data.completed_trips_30d} unit={t('trips.title').toLowerCase()} tooltip={t('metrics.completed30d')} />
-      </div>
+      <Section
+        title={t('reports.opCosts')}
+        description="Total fleet spend across all categories"
+        actions={<DownloadButton reportType="op-costs" />}
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <CostCard label={t('reports.fuelCost')} value={data.fuel_cost_30d} icon={IndianRupee} tooltip={t('metrics.fuelCost')} color="bg-orange-500" />
+          <CostCard label={t('reports.maintenanceCost')} value={data.maintenance_cost_30d} icon={IndianRupee} tooltip={t('metrics.maintenanceCost')} color="bg-red-500" />
+          <CostCard label={t('reports.expenses')} value={data.expenses_30d} icon={IndianRupee} tooltip={t('metrics.expenses')} color="bg-violet-500" />
+          <CostCard label={t('reports.totalOpCost')} value={data.total_op_cost_30d} icon={TrendingUp} tooltip={t('metrics.totalOpCost')} color="bg-emerald-500" primary />
+        </div>
+      </Section>
+    </div>
+  );
+}
 
-      <h3 className="mt-8 mb-4 text-lg font-semibold">{t('reports.opCosts')}</h3>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label={t('reports.fuelCost')} value={`\u20B9 ${data.fuel_cost_30d.toLocaleString()}`} tooltip={t('metrics.fuelCost')} />
-        <KpiCard label={t('reports.maintenanceCost')} value={`\u20B9 ${data.maintenance_cost_30d.toLocaleString()}`} tooltip={t('metrics.maintenanceCost')} />
-        <KpiCard label={t('reports.expenses')} value={`\u20B9 ${data.expenses_30d.toLocaleString()}`} tooltip={t('metrics.expenses')} />
-        <KpiCard label={t('reports.totalOpCost')} value={`\u20B9 ${data.total_op_cost_30d.toLocaleString()}`} tooltip={t('metrics.totalOpCost')} />
+function CostCard({
+  label,
+  value,
+  icon: Icon,
+  tooltip,
+  color,
+  primary,
+}: {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+  tooltip?: string;
+  color: string;
+  primary?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'group relative overflow-hidden rounded-lg border p-4 transition-all',
+        primary
+          ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5'
+          : 'bg-card',
+      )}
+    >
+      <div className="mb-2 flex items-center justify-between">
+        <div className={cn('flex h-8 w-8 items-center justify-center rounded-md text-white', color)}>
+          <Icon className="h-4 w-4" />
+        </div>
+        {tooltip && (
+          <span className="relative">
+            <Info className="h-3 w-3 cursor-help text-muted-foreground/50" />
+            <span className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 w-56 rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground opacity-0 shadow-floating transition-opacity group-hover:opacity-100">
+              {tooltip}
+            </span>
+          </span>
+        )}
       </div>
+      <p className="text-xl font-bold tracking-tight">
+        ₹{Math.round(value).toLocaleString('en-IN')}
+      </p>
+      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -181,60 +277,95 @@ function FinancialTab() {
   const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<VehicleHealth[]>('/reports/vehicle-health');
 
-  if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('healthData.loading')}</div>;
-  if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data || data.length === 0) return <div className="py-8 text-center text-muted-foreground">{t('healthData.noData')}</div>;
+  useEffect(() => {
+    if (!data && !loading) void fetchData();
+  }, [data, loading, fetchData]);
+
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-12 rounded-md bg-muted/40 skeleton" />
+        ))}
+      </div>
+    );
+  }
+  if (error) return <ErrorState title="Failed to load" message={error} />;
+  if (!data || data.length === 0)
+    return (
+      <div className="rounded-lg border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
+        <AlertCircle className="mx-auto mb-2 h-5 w-5" />
+        {t('healthData.noData')}
+      </div>
+    );
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t('reports.vehicleHealth')}</h2>
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-4 py-2 text-left">{t('reports.vehicle')}</th>
-              <th className="px-4 py-2 text-left">{t('reports.type')}</th>
-              <th className="px-4 py-2 text-right group relative">
-                {t('reports.fuelEff')}
-                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.fuelEff')}>&#9432;</span>
-              </th>
-              <th className="px-4 py-2 text-right group relative">
-                {t('reports.maint')}
-                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.maint')}>&#9432;</span>
-              </th>
-              <th className="px-4 py-2 text-right group relative">
-                {t('reports.driverSafety')}
-                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.driverSafety')}>&#9432;</span>
-              </th>
-              <th className="px-4 py-2 text-right group relative">
-                {t('reports.utilization')}
-                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.utilization')}>&#9432;</span>
-              </th>
-              <th className="px-4 py-2 text-right group relative">
-                {t('reports.overall')}
-                <span className="ml-1 cursor-help text-muted-foreground/50 text-xs" title={t('metrics.overall')}>&#9432;</span>
-              </th>
+    <Section
+      title={t('reports.vehicleHealth')}
+      description="Composite health scores per vehicle"
+    >
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 text-left font-semibold">Vehicle</th>
+              <th className="px-3 py-2 text-left font-semibold">Type</th>
+              <th className="px-3 py-2 text-right font-semibold">Fuel Eff.</th>
+              <th className="px-3 py-2 text-right font-semibold">Maint.</th>
+              <th className="px-3 py-2 text-right font-semibold">Safety</th>
+              <th className="px-3 py-2 text-right font-semibold">Utilization</th>
+              <th className="px-3 py-2 text-right font-semibold">Overall</th>
             </tr>
           </thead>
           <tbody>
             {data.map((v) => (
-              <tr key={v.vehicle_id} className="border-t">
-                <td className="px-4 py-2">{v.registration}</td>
-                <td className="px-4 py-2 text-muted-foreground">{v.type}</td>
-                <td className="px-4 py-2 text-right">{v.fuel_efficiency_pct}</td>
-                <td className="px-4 py-2 text-right">{v.maintenance_pct}</td>
-                <td className="px-4 py-2 text-right">{v.driver_safety_pct}</td>
-                <td className="px-4 py-2 text-right">{v.utilization_pct}</td>
-                <td className="px-4 py-2 text-right font-medium">{v.overall_score}</td>
+              <tr key={v.vehicle_id} className="border-b transition-colors hover:bg-muted/40">
+                <td className="px-3 py-2.5 font-medium">{v.registration}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{v.type}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  <HealthBar value={v.fuel_efficiency_pct} />
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  <HealthBar value={v.maintenance_pct} />
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  <HealthBar value={v.driver_safety_pct} />
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  <HealthBar value={v.utilization_pct} />
+                </td>
+                <td className="px-3 py-2.5 text-right">
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold',
+                      v.overall_score >= 80
+                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                        : v.overall_score >= 60
+                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                          : 'bg-red-500/10 text-red-700 dark:text-red-300',
+                    )}
+                  >
+                    {v.overall_score}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+    </Section>
+  );
+}
+
+function HealthBar({ value }: { value: number }) {
+  const color =
+    value >= 80 ? 'bg-emerald-500' : value >= 60 ? 'bg-amber-500' : 'bg-red-500';
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      <div className="h-1.5 w-12 overflow-hidden rounded-full bg-muted">
+        <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${value}%` }} />
+      </div>
+      <span className="font-mono text-xs">{value}</span>
     </div>
   );
 }
@@ -243,97 +374,141 @@ function ESGTab() {
   const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<EmissionsData>('/reports/emissions');
 
-  if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('emissionsData.loading')}</div>;
-  if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data) return <div className="py-8 text-center text-muted-foreground">{t('emissionsData.noData')}</div>;
+  useEffect(() => {
+    if (!data && !loading) void fetchData();
+  }, [data, loading, fetchData]);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <StatSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+  if (error) return <ErrorState title="Failed to load" message={error} />;
+  if (!data) return null;
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t('reports.co2Emissions')}</h2>
-        <DownloadButton reportType="emissions" />
-      </div>
+    <div className="space-y-6">
+      <Section
+        title={t('reports.co2Emissions')}
+        description="30-day CO2 footprint and intensity"
+        actions={<DownloadButton reportType="emissions" />}
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <KpiCard
+            label={t('reports.totalCo2')}
+            value={Math.round(data.total_co2_kg).toLocaleString()}
+            unit="kg"
+            tooltip={t('metrics.totalCo2')}
+            icon={Leaf}
+            accent="success"
+          />
+          <KpiCard
+            label={t('reports.totalDistance')}
+            value={Math.round(data.total_distance_km).toLocaleString()}
+            unit="km"
+            tooltip={t('metrics.totalDistance')}
+            icon={Gauge}
+            accent="info"
+          />
+          <KpiCard
+            label={t('reports.co2Intensity')}
+            value={
+              data.total_distance_km > 0
+                ? Math.round((data.total_co2_kg / data.total_distance_km) * 1000)
+                : t('common.na')
+            }
+            unit={data.total_distance_km > 0 ? 'g/km' : ''}
+            tooltip={t('metrics.co2Intensity')}
+            icon={Leaf}
+            accent="warning"
+          />
+          <KpiCard
+            label={t('reports.reportingMethod')}
+            value="IPCC/GHG"
+            tooltip={t('metrics.reportingMethod')}
+            icon={Info}
+            accent="primary"
+          />
+        </div>
+      </Section>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label={t('reports.totalCo2')} value={`${Math.round(data.total_co2_kg)}`} unit="kg" tooltip={t('metrics.totalCo2')} />
-        <KpiCard label={t('reports.totalDistance')} value={`${Math.round(data.total_distance_km)}`} unit="km" tooltip={t('metrics.totalDistance')} />
-        <KpiCard label={t('reports.co2Intensity')} value={
-          data.total_distance_km > 0
-            ? `${Math.round(data.total_co2_kg / data.total_distance_km * 1000)}`
-            : t('common.na')
-        } unit={data.total_distance_km > 0 ? 'g/km' : ''} tooltip={t('metrics.co2Intensity')} />
-        <KpiCard label={t('reports.reportingMethod')} value="IPCC/GHG" tooltip={t('metrics.reportingMethod')} />
-      </div>
-
-      <h3 className="mt-8 mb-4 text-lg font-semibold">{t('reports.perVehicleEmissions')}</h3>
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-4 py-2 text-left">{t('reports.vehicle')}</th>
-              <th className="px-4 py-2 text-right">{t('reports.co2Kg')}</th>
-              <th className="px-4 py-2 text-right">{t('reports.distanceKm')}</th>
-              <th className="px-4 py-2 text-right">{t('reports.trips')}</th>
-              <th className="px-4 py-2 text-right">{t('reports.co2PerKm')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.vehicles.map((v) => (
-              <tr key={v.vehicle_id} className="border-t">
-                <td className="px-4 py-2">{v.registration}</td>
-                <td className="px-4 py-2 text-right">{Math.round(v.co2_kg)}</td>
-                <td className="px-4 py-2 text-right">{Math.round(v.distance_km)}</td>
-                <td className="px-4 py-2 text-right">{v.trip_count}</td>
-                <td className="px-4 py-2 text-right">
-                  {v.distance_km > 0 ? Math.round(v.co2_kg / v.distance_km * 1000) : '-'}
-                </td>
+      <Section
+        title={t('reports.perVehicleEmissions')}
+        description="CO2 output by individual vehicle"
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-xs uppercase tracking-wide text-muted-foreground">
+                <th className="px-3 py-2 text-left font-semibold">Vehicle</th>
+                <th className="px-3 py-2 text-right font-semibold">CO2 (kg)</th>
+                <th className="px-3 py-2 text-right font-semibold">Distance (km)</th>
+                <th className="px-3 py-2 text-right font-semibold">Trips</th>
+                <th className="px-3 py-2 text-right font-semibold">g CO2 / km</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mt-4 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
-        <p>{t('emissionsData.footnote')}</p>
-      </div>
+            </thead>
+            <tbody>
+              {data.vehicles.map((v) => (
+                <tr key={v.vehicle_id} className="border-b transition-colors hover:bg-muted/40">
+                  <td className="px-3 py-2.5 font-medium">{v.registration}</td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">
+                    {Math.round(v.co2_kg).toLocaleString()}
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">
+                    {Math.round(v.distance_km).toLocaleString()}
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">{v.trip_count}</td>
+                  <td className="px-3 py-2.5 text-right font-mono text-xs">
+                    {v.distance_km > 0 ? Math.round((v.co2_kg / v.distance_km) * 1000) : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+          {t('emissionsData.footnote')}
+        </p>
+      </Section>
     </div>
   );
 }
 
 function UtilizationHeatmap({ data }: { data: UtilizationItem[] }) {
-  const { t } = useTranslation();
   if (data.length === 0) {
-    return <div className="py-4 text-center text-muted-foreground">{t('utilizationData.noDataAvailable')}</div>;
+    return <div className="py-4 text-center text-sm text-muted-foreground">No data</div>;
   }
-
   const maxUtil = Math.max(...data.map((d) => d.utilization_pct), 1);
-
   return (
     <div className="space-y-3">
       {data.map((item) => {
         const barWidth = Math.round((item.utilization_pct / maxUtil) * 100);
         const intensity =
           item.utilization_pct >= 70
-            ? 'bg-green-500'
+            ? 'bg-emerald-500'
             : item.utilization_pct >= 40
-              ? 'bg-yellow-500'
+              ? 'bg-amber-500'
               : 'bg-red-500';
-
         return (
           <div key={item.vehicle_id} className="flex items-center gap-3">
-            <div className="w-32 shrink-0 text-sm font-medium">{item.registration}</div>
-            <div className="flex-1 rounded-full bg-muted h-5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${intensity}`}
-                style={{ width: `${barWidth}%` }}
-              />
+            <div className="w-32 shrink-0 truncate text-sm font-medium">{item.registration}</div>
+            <div className="flex-1">
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn('h-full rounded-full transition-all duration-500', intensity)}
+                  style={{ width: `${barWidth}%` }}
+                />
+              </div>
             </div>
-            <div className="w-16 shrink-0 text-right text-sm tabular-nums">
+            <div className="w-16 shrink-0 text-right text-sm font-semibold tabular-nums">
               {item.utilization_pct}%
             </div>
             <div className="w-12 shrink-0 text-right text-xs text-muted-foreground">
-              {item.trip_count} {t('reports.trips').toLowerCase()}
+              {item.trip_count}
             </div>
           </div>
         );
@@ -346,46 +521,75 @@ function UtilizationTab() {
   const { t } = useTranslation();
   const { data, loading, error, fetchData } = useReportData<UtilizationItem[]>('/reports/utilization');
 
-  if (!data && !loading) fetchData();
-  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('utilizationData.loading')}</div>;
-  if (error) return <div className="py-8 text-center text-red-500">{error}</div>;
-  if (!data) return <div className="py-8 text-center text-muted-foreground">{t('utilizationData.noData')}</div>;
+  useEffect(() => {
+    if (!data && !loading) void fetchData();
+  }, [data, loading, fetchData]);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <StatSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+  if (error) return <ErrorState title="Failed to load" message={error} />;
+  if (!data) return null;
 
   const avgUtil = Math.round(data.reduce((s, d) => s + d.utilization_pct, 0) / data.length);
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t('reports.vehicleUtilization')}</h2>
-      </div>
+    <div className="space-y-6">
+      <Section
+        title={t('reports.vehicleUtilization')}
+        description="How much each vehicle is being used"
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <StatCard
+            label={t('reports.avgUtilization')}
+            value={avgUtil}
+            unit="%"
+            icon={<Gauge className="h-4 w-4" />}
+            accent="primary"
+          />
+          <StatCard
+            label={t('reports.vehiclesTracked')}
+            value={data.length}
+            icon={<Truck className="h-4 w-4" />}
+            accent="info"
+          />
+          <StatCard
+            label={t('reports.busiestVehicle')}
+            value={data.length > 0 ? data[0]!.registration : t('common.na')}
+            icon={<TrendingUp className="h-4 w-4" />}
+            accent="success"
+          />
+        </div>
+      </Section>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        <KpiCard label={t('reports.avgUtilization')} value={avgUtil} unit="%" tooltip={t('metrics.avgUtilization')} />
-        <KpiCard label={t('reports.vehiclesTracked')} value={data.length} tooltip={t('metrics.vehiclesTracked')} />
-        <KpiCard label={t('reports.busiestVehicle')} value={
-          data.length > 0 ? data[0]!.registration : t('common.na')
-        } unit={`${data.length > 0 ? data[0]!.utilization_pct : 0}%`} tooltip={t('metrics.busiestVehicle')} />
-      </div>
-
-      <h3 className="mt-8 mb-4 text-lg font-semibold">{t('reports.perVehicleBreakdown')}</h3>
-      <div className="rounded-lg border p-4">
+      <Section
+        title={t('reports.perVehicleBreakdown')}
+        description="Utilization percentage by vehicle"
+        actions={
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <Legend color="bg-emerald-500" label="≥70%" />
+            <Legend color="bg-amber-500" label="40-69%" />
+            <Legend color="bg-red-500" label="<40%" />
+          </div>
+        }
+      >
         <UtilizationHeatmap data={data} />
-      </div>
+      </Section>
+    </div>
+  );
+}
 
-      <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded-sm bg-green-500" />
-          <span>{t('reports.utilizationGood')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded-sm bg-yellow-500" />
-          <span>{t('reports.utilizationModerate')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="h-3 w-3 rounded-sm bg-red-500" />
-          <span>{t('reports.utilizationLow')}</span>
-        </div>
-      </div>
+function Legend({ color, label }: { color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={cn('h-2.5 w-2.5 rounded-sm', color)} />
+      <span className="font-medium">{label}</span>
     </div>
   );
 }
@@ -394,39 +598,27 @@ function ReportsPage() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('fleet');
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'fleet', label: t('reports.fleetOverview') },
-    { key: 'financial', label: t('reports.financial') },
-    { key: 'esg', label: t('reports.esg') },
-    { key: 'utilization', label: t('reports.utilization') },
+  const tabs: { key: Tab; label: string; icon: LucideIcon }[] = [
+    { key: 'fleet', label: t('reports.fleetOverview'), icon: Truck },
+    { key: 'financial', label: t('reports.financial'), icon: IndianRupee },
+    { key: 'esg', label: t('reports.esg'), icon: Leaf },
+    { key: 'utilization', label: t('reports.utilization'), icon: Gauge },
   ];
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">{t('reports.title')}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t('reports.subtitle')}</p>
+    <div className="space-y-6">
+      <PageHeader
+        title={t('reports.title')}
+        description={t('reports.subtitle')}
+      />
 
-      <div className="mt-6 border-b" role="tablist">
-        <div className="flex gap-0 -mb-px">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              role="tab"
-              aria-selected={activeTab === tab.key}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? 'border-primary text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Tabs
+        items={tabs.map((t) => ({ key: t.key, label: t.label, icon: <t.icon className="h-3.5 w-3.5" /> }))}
+        value={activeTab}
+        onChange={(k) => setActiveTab(k as Tab)}
+      />
 
-      <div className="mt-6" role="tabpanel">
+      <div>
         {activeTab === 'fleet' && <FleetTab />}
         {activeTab === 'financial' && <FinancialTab />}
         {activeTab === 'esg' && <ESGTab />}
