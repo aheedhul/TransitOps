@@ -32,7 +32,8 @@
     "loading": "Loading...",
     "retry": "Retry",
     "discard": "Discard",
-    "retryAll": "Retry All"
+    "retryAll": "Retry All",
+    "comingSoon": "Coming soon"
   },
   "nav": {
     "dashboard": "Dashboard",

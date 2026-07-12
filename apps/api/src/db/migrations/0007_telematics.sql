@@ -17,8 +17,6 @@ CREATE TABLE IF NOT EXISTS vehicle_locations (
 
 CREATE INDEX IF NOT EXISTS idx_vehicle_locations_vehicle ON vehicle_locations (vehicle_id, recorded_at DESC);
 CREATE INDEX IF NOT EXISTS idx_vehicle_locations_trip ON vehicle_locations (trip_id, recorded_at DESC);
-CREATE INDEX IF NOT EXISTS idx_vehicle_locations_recent ON vehicle_locations (vehicle_id, recorded_at DESC)
-  WHERE recorded_at > now() - interval '24 hours';
 
 CREATE TABLE IF NOT EXISTS geofences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

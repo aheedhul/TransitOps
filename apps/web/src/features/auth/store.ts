@@ -18,12 +18,32 @@ interface AuthStore {
   hasRole: (role: string) => boolean;
 }
 
+function loadSession(): AuthSession | null {
+  try {
+    const raw = localStorage.getItem('transitops-session');
+    if (raw) return JSON.parse(raw) as AuthSession;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveSession(session: AuthSession | null) {
+  try {
+    if (session) {
+      localStorage.setItem('transitops-session', JSON.stringify(session));
+    } else {
+      localStorage.removeItem('transitops-session');
+    }
+  } catch { /* ignore */ }
+}
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
-  session: null,
+  session: loadSession(),
   setSession: (session) => {
+    saveSession(session);
     set({ session });
   },
   clearSession: () => {
+    saveSession(null);
     set({ session: null });
   },
   isAuthenticated: () => get().session !== null,
