@@ -39,7 +39,7 @@ export function createServer(): Express {
   app.use(helmet());
   app.use(
     cors({
-      origin: env.NODE_ENV === 'production' ? false : true,
+      origin: env.FRONTEND_URL || (env.NODE_ENV === 'production' ? false : true),
       credentials: true,
     }),
   );

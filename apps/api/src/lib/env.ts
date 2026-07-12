@@ -49,6 +49,7 @@ const envSchema = z.object({
   SENTRY_DSN_API: z.string().default(''),
   AUDIT_RETENTION_DAYS: z.coerce.number().int().positive().default(365),
   DEFAULT_CURRENCY: z.string().default('INR'),
+  FRONTEND_URL: z.string().url().optional(),
 });
 
 export const env = envSchema.parse(process.env);
