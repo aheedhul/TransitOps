@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { QrCode, Download } from 'lucide-react';
 import QRCode from 'qrcode';
+import { Card } from '../../../components/ui/card.js';
+import { Button } from '../../../components/ui/button.js';
 
 interface VehicleQRProps {
   registrationNumber: string;
@@ -17,7 +20,7 @@ export function VehicleQRCode({ registrationNumber, detailUrl }: VehicleQRProps)
       width: 200,
       margin: 2,
       color: {
-        dark: '#000000',
+        dark: '#0f172a',
         light: '#ffffff',
       },
     });
@@ -32,17 +35,33 @@ export function VehicleQRCode({ registrationNumber, detailUrl }: VehicleQRProps)
   };
 
   return (
-    <div className="inline-flex flex-col items-center gap-2 rounded-lg border bg-card p-4">
-      <h3 className="text-sm font-semibold">{t('qrCode.title')}</h3>
-      <canvas ref={canvasRef} className="rounded border" />
-      <p className="text-xs text-muted-foreground">{registrationNumber}</p>
-      <p className="text-xs text-muted-foreground">{t('qrCode.description')}</p>
-      <button
+    <Card className="flex flex-col items-center gap-3 p-5">
+      <div className="flex w-full items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <QrCode className="h-3.5 w-3.5" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">{t('qrCode.title')}</h3>
+        </div>
+      </div>
+      <div className="rounded-lg border bg-white p-2">
+        <canvas ref={canvasRef} className="rounded" />
+      </div>
+      <div className="text-center">
+        <p className="font-mono text-xs font-semibold text-foreground">
+          {registrationNumber}
+        </p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">{t('qrCode.description')}</p>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        leftIcon={<Download className="h-3.5 w-3.5" />}
         onClick={handleDownload}
-        className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+        className="w-full"
       >
         {t('qrCode.download')}
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }
