@@ -43,6 +43,74 @@ export function initAuditSubscriber(): void {
   subscribe(TOPICS.USER_CREATED, async (event) => {
     await writeAudit(event, event.topic.replace('.', ' '));
   });
+
+  subscribe(TOPICS.TRIP_CREATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.TRIP_UPDATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.TRIP_DELETED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.TRIP_DISPATCHED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.TRIP_STARTED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.TRIP_COMPLETED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.TRIP_CANCELLED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.MAINTENANCE_CREATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.MAINTENANCE_UPDATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.MAINTENANCE_CLOSED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.MAINTENANCE_DELETED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.FUEL_LOG_CREATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.FUEL_LOG_UPDATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.FUEL_LOG_DELETED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.EXPENSE_CREATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.EXPENSE_UPDATED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
+
+  subscribe(TOPICS.EXPENSE_DELETED, async (event) => {
+    await writeAudit(event, event.topic.replace('.', ' '));
+  });
 }
 
 async function writeAudit(event: { id: string; actorId: string | null; organizationId: string; entity: { type: string; id: string }; traceId: string }, action: string) {

@@ -24,8 +24,25 @@ export const TOPICS = {
   TRIP_COMPLETED: 'trip.completed',
   TRIP_CANCELLED: 'trip.cancelled',
 
+  MAINTENANCE_CREATED: 'maintenance.created',
+  MAINTENANCE_UPDATED: 'maintenance.updated',
   MAINTENANCE_CLOSED: 'maintenance.closed',
+  MAINTENANCE_DELETED: 'maintenance.deleted',
+
+  MAINTENANCE_SCHEDULE_PREDICTED: 'maintenance.schedule.predicted',
+
   FUEL_LOG_CREATED: 'fuel.log.created',
+  FUEL_LOG_UPDATED: 'fuel.log.updated',
+  FUEL_LOG_DELETED: 'fuel.log.deleted',
+
+  FUEL_ANOMALY_DETECTED: 'anomaly.fuel.detected',
+
+  EXPENSE_CREATED: 'expense.created',
+  EXPENSE_UPDATED: 'expense.updated',
+  EXPENSE_DELETED: 'expense.deleted',
+
+  NOTIFICATION_REQUESTED: 'notification.requested',
+  NOTIFICATION_DELIVERED: 'notification.delivered',
 
   AUDIT_LOG_WRITTEN: 'audit.log.written',
 } as const;

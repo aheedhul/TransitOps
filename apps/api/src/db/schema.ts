@@ -324,3 +324,220 @@ export const vehicleDocuments = pgTable(
     check('chk_vehicle_doc_type', sql`${table.type} in ('insurance','registration','fitness','pollution','permit','photo','other')`),
   ],
 );
+
+// ============================================================
+// Phase 3 — Maintenance
+// ============================================================
+
+export const maintenanceSchedules = pgTable(
+  'maintenance_schedules',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    basisRuleId: text('basis_rule_id').notNull(),
+    predictedDueOdometer: numeric('predicted_due_odometer', { precision: 10, scale: 2 }),
+    predictedDueDate: date('predicted_due_date'),
+    predictedAt: timestamp('predicted_at', { withTimezone: true }).notNull().defaultNow(),
+    status: text('status').notNull().default('pending'),
+    fulfilledMaintenanceId: uuid('fulfilled_maintenance_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_maint_sched_vehicle').on(table.vehicleId, table.status),
+    index('idx_maint_sched_due').on(table.status, table.predictedDueDate),
+    check('chk_maint_sched_status', sql`${table.status} in ('pending','scheduled','fulfilled','superseded')`),
+  ],
+);
+
+export const maintenanceLogs = pgTable(
+  'maintenance_logs',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    type: text('type').notNull(),
+    description: text('description').notNull(),
+    serviceOdometer: numeric('service_odometer', { precision: 10, scale: 2 }),
+    cost: numeric('cost', { precision: 14, scale: 2 }).notNull().default('0'),
+    vendor: text('vendor'),
+    status: text('status').notNull().default('active'),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+    closedBy: uuid('closed_by').references(() => users.id),
+    predictedScheduleId: uuid('predicted_schedule_id'),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_maint_logs_org_vehicle').on(table.organizationId, table.vehicleId, table.status).where(sql`${table.deletedAt} is null`),
+    index('idx_maint_logs_vehicle_time').on(table.vehicleId, table.createdAt),
+    check('chk_maint_log_type', sql`${table.type} in ('oil_change','tyre','brake','service','inspection','repair','other')`),
+    check('chk_maint_log_status', sql`${table.status} in ('active','closed')`),
+    check('chk_maint_cost', sql`${table.cost} >= 0`),
+  ],
+);
+
+// ============================================================
+// Phase 3 — Fuel
+// ============================================================
+
+export const fuelLogs = pgTable(
+  'fuel_logs',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    tripId: uuid('trip_id').references(() => trips.id),
+    liters: numeric('liters', { precision: 10, scale: 3 }).notNull(),
+    cost: numeric('cost', { precision: 14, scale: 2 }).notNull(),
+    odometerKm: numeric('odometer_km', { precision: 10, scale: 2 }).notNull(),
+    fuelType: text('fuel_type').notNull(),
+    filledStation: text('filled_station'),
+    filledAt: timestamp('filled_at', { withTimezone: true }).notNull(),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_fuel_logs_org_vehicle').on(table.organizationId, table.vehicleId, table.filledAt.desc()).where(sql`${table.deletedAt} is null`),
+    index('idx_fuel_logs_trip').on(table.tripId),
+    check('chk_fuel_liters', sql`${table.liters} > 0`),
+    check('chk_fuel_cost', sql`${table.cost} >= 0`),
+    check('chk_fuel_odometer', sql`${table.odometerKm} >= 0`),
+  ],
+);
+
+export const fuelAnomalyFlags = pgTable(
+  'fuel_anomaly_flags',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    fuelLogId: uuid('fuel_log_id')
+      .notNull()
+      .references(() => fuelLogs.id, { onDelete: 'cascade' }),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    expectedConsumptionL: numeric('expected_consumption_l', { precision: 10, scale: 3 }).notNull(),
+    actualConsumptionL: numeric('actual_consumption_l', { precision: 10, scale: 3 }).notNull(),
+    expectedKpl: numeric('expected_kpl', { precision: 8, scale: 3 }).notNull(),
+    actualKpl: numeric('actual_kpl', { precision: 8, scale: 3 }).notNull(),
+    deviationPct: numeric('deviation_pct', { precision: 6, scale: 2 }).notNull(),
+    thresholdPct: numeric('threshold_pct', { precision: 6, scale: 2 }).notNull(),
+    severity: text('severity').notNull(),
+    flaggedAt: timestamp('flagged_at', { withTimezone: true }).notNull().defaultNow(),
+    acknowledgedAt: timestamp('acknowledged_at', { withTimezone: true }),
+    acknowledgedBy: uuid('acknowledged_by').references(() => users.id),
+    resolution: text('resolution'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique('uq_fuel_anomaly_log').on(table.fuelLogId),
+    index('idx_fuel_anomaly_vehicle').on(table.vehicleId, table.flaggedAt.desc()),
+    check('chk_anomaly_severity', sql`${table.severity} in ('low','medium','high')`),
+  ],
+);
+
+// ============================================================
+// Phase 3 — Expenses
+// ============================================================
+
+export const expenses = pgTable(
+  'expenses',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    tripId: uuid('trip_id').references(() => trips.id),
+    type: text('type').notNull(),
+    amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
+    incurredAt: timestamp('incurred_at', { withTimezone: true }).notNull(),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_expenses_org_vehicle').on(table.organizationId, table.vehicleId, table.incurredAt).where(sql`${table.deletedAt} is null`),
+    check('chk_expense_type', sql`${table.type} in ('toll','parking','repair','misc','document')`),
+    check('chk_expense_amount', sql`${table.amount} >= 0`),
+  ],
+);
+
+// ============================================================
+// Phase 3 — Notifications
+// ============================================================
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    type: text('type').notNull(),
+    priority: text('priority').notNull(),
+    title: text('title').notNull(),
+    message: text('message').notNull(),
+    payload: jsonb('payload').notNull().default(sql`'{}'::jsonb`),
+    audienceRole: text('audience_role'),
+    actorUserId: uuid('actor_user_id').references(() => users.id),
+    fingerprint: text('fingerprint').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    unique('uq_notification_fingerprint').on(table.organizationId, table.fingerprint),
+    index('idx_notifications_org_time').on(table.organizationId, table.createdAt.desc()).where(sql`${table.deletedAt} is null`),
+    index('idx_notifications_role').on(table.audienceRole).where(sql`${table.deletedAt} is null`),
+    check('chk_notification_priority', sql`${table.priority} in ('red','orange','blue','green')`),
+    check('chk_notification_audience_role', sql`${table.audienceRole} is null or ${table.audienceRole} in ('admin','fleet_manager','driver','safety_officer','financial_analyst')`),
+  ],
+);
+
+export const notificationRecipients = pgTable(
+  'notification_recipients',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    notificationId: uuid('notification_id')
+      .notNull()
+      .references(() => notifications.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    dismissedAt: timestamp('dismissed_at', { withTimezone: true }),
+    emailState: text('email_state'),
+    pushState: text('push_state'),
+    pushReceipt: text('push_receipt'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_notif_recipients_user_unread').on(table.userId, table.createdAt.desc()).where(sql`${table.readAt} is null`),
+    unique('uq_notif_recipient').on(table.notificationId, table.userId),
+    check('chk_notif_email_state', sql`${table.emailState} is null or ${table.emailState} in ('pending','sent','failed','skipped')`),
+    check('chk_notif_push_state', sql`${table.pushState} is null or ${table.pushState} in ('pending','sent','failed','skipped')`),
+  ],
+);

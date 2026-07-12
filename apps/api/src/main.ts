@@ -2,8 +2,14 @@ import { createServer } from './app.js';
 import { env } from './lib/env.js';
 import { logger } from './lib/logger.js';
 import { initAuditSubscriber } from './lib/events/subscribers/audit.js';
+import { initFuelAnomalySubscriber } from './lib/events/subscribers/fuel-anomaly.js';
+import { initMaintenanceScheduleSubscriber } from './lib/events/subscribers/maintenance-schedule.js';
+import { initNotificationSubscriber } from './lib/events/subscribers/notifications.js';
 
 initAuditSubscriber();
+initFuelAnomalySubscriber();
+initMaintenanceScheduleSubscriber();
+initNotificationSubscriber();
 
 const app = createServer();
 
