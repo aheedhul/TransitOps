@@ -7,6 +7,8 @@ import { Route as AuthenticatedDashboardImport } from './routes/_authenticated.d
 import { Route as AuthenticatedVehiclesImport } from './routes/_authenticated.vehicles.js'
 import { Route as AuthenticatedDriversImport } from './routes/_authenticated.drivers.js'
 import { Route as AuthenticatedTripsImport } from './routes/_authenticated.trips.js'
+import { Route as AuthenticatedTripsNewImport } from './routes/_authenticated.trips.new.js'
+import { Route as AuthenticatedTripsIdImport } from './routes/_authenticated.trips.$id.js'
 import { Route as AuthenticatedMaintenanceImport } from './routes/_authenticated.maintenance.js'
 import { Route as LoginImport } from './routes/login.js'
 import { Route as IndexImport } from './routes/index.js'
@@ -33,6 +35,18 @@ const AuthenticatedTripsRoute = AuthenticatedTripsImport.update({
   id: '/_authenticated/trips',
   path: '/trips',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+
+const AuthenticatedTripsNewRoute = AuthenticatedTripsNewImport.update({
+  id: '/_authenticated/trips/new',
+  path: '/new',
+  getParentRoute: () => AuthenticatedTripsRoute,
+} as any)
+
+const AuthenticatedTripsIdRoute = AuthenticatedTripsIdImport.update({
+  id: '/_authenticated/trips/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedTripsRoute,
 } as any)
 
 const AuthenticatedMaintenanceRoute = AuthenticatedMaintenanceImport.update({
@@ -67,6 +81,8 @@ declare module '@tanstack/react-router' {
     '/_authenticated/vehicles': { id: '/_authenticated/vehicles'; path: '/vehicles'; fullPath: '/vehicles'; preLoaderRoute: typeof AuthenticatedVehiclesImport; parentRoute: typeof AuthenticatedImport }
     '/_authenticated/drivers': { id: '/_authenticated/drivers'; path: '/drivers'; fullPath: '/drivers'; preLoaderRoute: typeof AuthenticatedDriversImport; parentRoute: typeof AuthenticatedImport }
     '/_authenticated/trips': { id: '/_authenticated/trips'; path: '/trips'; fullPath: '/trips'; preLoaderRoute: typeof AuthenticatedTripsImport; parentRoute: typeof AuthenticatedImport }
+    '/_authenticated/trips/new': { id: '/_authenticated/trips/new'; path: '/trips/new'; fullPath: '/trips/new'; preLoaderRoute: typeof AuthenticatedTripsNewImport; parentRoute: typeof AuthenticatedTripsImport }
+    '/_authenticated/trips/$id': { id: '/_authenticated/trips/$id'; path: '/trips/$id'; fullPath: '/trips/$id'; preLoaderRoute: typeof AuthenticatedTripsIdImport; parentRoute: typeof AuthenticatedTripsImport }
     '/_authenticated/maintenance': { id: '/_authenticated/maintenance'; path: '/maintenance'; fullPath: '/maintenance'; preLoaderRoute: typeof AuthenticatedMaintenanceImport; parentRoute: typeof AuthenticatedImport }
   }
 }
@@ -78,7 +94,10 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedDashboardRoute,
     AuthenticatedVehiclesRoute,
     AuthenticatedDriversRoute,
-    AuthenticatedTripsRoute,
+    AuthenticatedTripsRoute: AuthenticatedTripsRoute.addChildren({
+      AuthenticatedTripsNewRoute,
+      AuthenticatedTripsIdRoute,
+    }),
     AuthenticatedMaintenanceRoute,
   }),
 })
@@ -94,7 +113,9 @@ export const routeTree = rootRoute.addChildren({
     "/_authenticated/dashboard": { "filePath": "_authenticated.dashboard.tsx" },
     "/_authenticated/vehicles": { "filePath": "_authenticated.vehicles.tsx" },
     "/_authenticated/drivers": { "filePath": "_authenticated.drivers.tsx" },
-    "/_authenticated/trips": { "filePath": "_authenticated.trips.tsx" },
+    "/_authenticated/trips": { "filePath": "_authenticated.trips.tsx", "children": ["/_authenticated/trips/new", "/_authenticated/trips/$id"] },
+    "/_authenticated/trips/new": { "filePath": "_authenticated.trips.new.tsx" },
+    "/_authenticated/trips/$id": { "filePath": "_authenticated.trips.$id.tsx" },
     "/_authenticated/maintenance": { "filePath": "_authenticated.maintenance.tsx" }
   }
 }

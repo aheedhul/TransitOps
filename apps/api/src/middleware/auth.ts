@@ -78,6 +78,8 @@ const CAPABILITIES: Record<string, string[]> = {
   'trip.read': ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'],
   'trip.create': ['admin', 'fleet_manager', 'driver'],
   'trip.dispatch': ['admin', 'fleet_manager'],
+  'trip.start': ['admin', 'fleet_manager', 'driver'],
+  'trip.checkpoint': ['admin', 'fleet_manager', 'driver'],
   'trip.complete': ['admin', 'fleet_manager', 'driver'],
   'trip.cancel': ['admin', 'fleet_manager', 'driver'],
   'maintenance.read': ['admin', 'fleet_manager', 'driver', 'safety_officer', 'financial_analyst'],

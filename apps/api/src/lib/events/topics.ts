@@ -15,7 +15,12 @@ export const TOPICS = {
   USER_UPDATED: 'user.updated',
   USER_DELETED: 'user.deleted',
 
+  TRIP_CREATED: 'trip.created',
+  TRIP_UPDATED: 'trip.updated',
+  TRIP_DELETED: 'trip.deleted',
   TRIP_DISPATCHED: 'trip.dispatched',
+  TRIP_STARTED: 'trip.started',
+  TRIP_CHECKPOINT_ADDED: 'trip.checkpoint.added',
   TRIP_COMPLETED: 'trip.completed',
   TRIP_CANCELLED: 'trip.cancelled',
 

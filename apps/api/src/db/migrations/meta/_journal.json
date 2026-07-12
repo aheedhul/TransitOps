@@ -15,6 +15,13 @@
       "when": 1783839433403,
       "tag": "0001_hot_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783846258118,
+      "tag": "0002_stiff_triathlon",
+      "breakpoints": true
     }
   ]
 }

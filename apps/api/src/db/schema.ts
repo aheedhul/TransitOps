@@ -223,6 +223,81 @@ export const customers = pgTable(
   ],
 );
 
+export const trips = pgTable(
+  'trips',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    vehicleId: uuid('vehicle_id').references(() => vehicles.id),
+    driverId: uuid('driver_id').references(() => drivers.id),
+    customerId: uuid('customer_id').references(() => customers.id),
+    sourceLabel: text('source_label').notNull(),
+    sourceLat: numeric('source_lat', { precision: 9, scale: 6 }),
+    sourceLng: numeric('source_lng', { precision: 9, scale: 6 }),
+    destinationLabel: text('destination_label').notNull(),
+    destinationLat: numeric('destination_lat', { precision: 9, scale: 6 }),
+    destinationLng: numeric('destination_lng', { precision: 9, scale: 6 }),
+    cargoWeightKg: numeric('cargo_weight_kg', { precision: 10, scale: 2 }).notNull(),
+    plannedDistanceKm: numeric('planned_distance_km', { precision: 10, scale: 2 }),
+    plannedTravelMins: integer('planned_travel_mins'),
+    estimatedFuelL: numeric('estimated_fuel_l', { precision: 10, scale: 3 }),
+    estimatedFuelCost: numeric('estimated_fuel_cost', { precision: 14, scale: 2 }),
+    actualDistanceKm: numeric('actual_distance_km', { precision: 10, scale: 2 }),
+    actualTravelMins: integer('actual_travel_mins'),
+    fuelConsumedL: numeric('fuel_consumed_l', { precision: 10, scale: 3 }),
+    revenueAmount: numeric('revenue_amount', { precision: 14, scale: 2 }),
+    cargoDescription: text('cargo_description'),
+    status: text('status').notNull().default('draft'),
+    dispatchedAt: timestamp('dispatched_at', { withTimezone: true }),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    cancelReason: text('cancel_reason'),
+    plannedDepartureAt: timestamp('planned_departure_at', { withTimezone: true }),
+    plannedArrivalAt: timestamp('planned_arrival_at', { withTimezone: true }),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_trips_org_status').on(table.organizationId, table.status).where(sql`${table.deletedAt} is null`),
+    index('idx_trips_vehicle').on(table.vehicleId, table.dispatchedAt.desc()),
+    index('idx_trips_driver').on(table.driverId, table.dispatchedAt.desc()),
+    index('idx_trips_customer').on(table.customerId).where(sql`${table.deletedAt} is null`),
+    check('chk_trip_status', sql`${table.status} in ('draft','dispatched','in-transit','completed','cancelled')`),
+    check('chk_cargo_weight', sql`${table.cargoWeightKg} > 0`),
+    check('chk_cancel_reason', sql`${table.cancelReason} is null or ${table.cancelReason} in ('customer','vehicle_breakdown','weather','compliance','duplicate','other')`),
+  ],
+);
+
+export const tripEvents = pgTable(
+  'trip_events',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    tripId: uuid('trip_id')
+      .notNull()
+      .references(() => trips.id, { onDelete: 'cascade' }),
+    eventType: text('event_type').notNull(),
+    lat: numeric('lat', { precision: 9, scale: 6 }),
+    lng: numeric('lng', { precision: 9, scale: 6 }),
+    odometerKm: numeric('odometer_km', { precision: 10, scale: 2 }),
+    note: text('note'),
+    payload: jsonb('payload').notNull().default(sql`'{}'::jsonb`),
+    recordedBy: uuid('recorded_by').references(() => users.id),
+    recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_trip_events_trip').on(table.tripId, table.recordedAt),
+    check('chk_trip_event_type', sql`${table.eventType} in ('created','dispatched','enroute','position','checkpoint','delayed','arrived','pod-attached','completed','cancelled')`),
+  ],
+);
+
 export const vehicleDocuments = pgTable(
   'vehicle_documents',
   {

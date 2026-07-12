@@ -10,6 +10,8 @@ import authRoutes from './modules/auth/routes.js';
 import vehicleRoutes from './modules/vehicles/routes.js';
 import driverRoutes from './modules/drivers/routes.js';
 import customerRoutes from './modules/customers/routes.js';
+import tripRoutes from './modules/trips/routes.js';
+import intelligenceRoutes from './modules/intelligence/routes.js';
 
 export function createServer(): Express {
   const app = express();
@@ -48,6 +50,8 @@ export function createServer(): Express {
   app.use('/api/v1', vehicleRoutes);
   app.use('/api/v1', driverRoutes);
   app.use('/api/v1', customerRoutes);
+  app.use('/api/v1', tripRoutes);
+  app.use('/api/v1', intelligenceRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({
