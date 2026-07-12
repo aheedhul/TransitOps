@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "tsx --env-file=../../.env.local watch src/main.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -12,8 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:rollback": "drizzle-kit drop",
-    "seed": "tsx src/db/seed.ts",
-    "openapi:gen": "tsx src/scripts/generate-openapi.ts"
+    "seed": "tsx --env-file=../../.env.local src/db/seed.ts",
+    "openapi:gen": "tsx --env-file=../../.env.local src/scripts/generate-openapi.ts"
   },
   "dependencies": {
     "express": "^4.21.2",
