@@ -15,7 +15,7 @@ function getStoredTheme(): Theme {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
   } catch { /* not available */ }
-  return 'system';
+  return 'light';
 }
 
 function applyThemeClass(theme: Theme) {
