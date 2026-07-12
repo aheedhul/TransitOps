@@ -2,7 +2,8 @@
   "app": {
     "title": "TransitOps",
     "brandName": "TransitOps",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "tagline": "Intelligent Fleet Operations Platform"
   },
   "auth": {
     "login": "Sign in",
@@ -10,9 +11,9 @@
     "email": "Email",
     "password": "Password",
     "forgotPassword": "Forgot password?",
-    "loginTitle": "TransitOps",
-    "loginSubtitle": "Intelligent Fleet Operations ERP",
-    "emailPlaceholder": "admin@transitops.demo",
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Sign in to your account to continue.",
+    "emailPlaceholder": "you@transitops.demo",
     "passwordPlaceholder": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
   },
   "common": {
@@ -33,7 +34,10 @@
     "retry": "Retry",
     "discard": "Discard",
     "retryAll": "Retry All",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "all": "All",
+    "previous": "Previous",
+    "next": "Next"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -124,12 +128,13 @@
     "placeholder": "Maintenance logs will appear here."
   },
   "notifications": {
-    "title": "Notification Center",
+    "title": "Notifications",
     "bellLabel": "Notifications",
     "viewAll": "View all",
     "all": "All",
     "unread": "Unread",
-    "noNotifications": "No notifications"
+    "noNotifications": "No notifications yet",
+    "noNotificationsDesc": "You're all caught up! Notifications will appear here when events occur."
   },
   "audit": {
     "title": "Audit Log",
@@ -145,7 +150,7 @@
   "reports": {
     "title": "Reports & Analytics",
     "subtitle": "Performance metrics, costs, emissions, and fleet health.",
-    "fleetOverview": "Fleet Overview",
+    "fleetOverview": "Fleet",
     "financial": "Financial",
     "esg": "ESG / CO2",
     "utilization": "Utilization",
@@ -220,7 +225,7 @@
     "co2PerKm": "CO2 intensity per kilometer for this vehicle. Lower is better."
   },
   "dispatch": {
-    "title": "Dispatch Recommendation",
+    "title": "AI Recommendation",
     "analyzing": "Analyzing...",
     "getRecommendation": "Get Recommendation",
     "topPick": "Top Pick",
@@ -282,7 +287,7 @@
   },
   "search": {
     "placeholder": "Search vehicles, drivers, trips, customers...",
-    "noResults": "No results found",
+    "noResults": "No matching results",
     "typeMore": "Type at least 3 characters to search",
     "vehicles": "Vehicles",
     "drivers": "Drivers",
