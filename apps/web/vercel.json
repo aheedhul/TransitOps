@@ -5,7 +5,7 @@
       "destination": "https://transitops-ielj.onrender.com/api/:path*"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!assets/|favicon.ico|manifest.json|sw.js).*)",
       "destination": "/index.html"
     }
   ]
