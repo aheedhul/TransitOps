@@ -3,10 +3,6 @@
     {
       "source": "/api/:path*",
       "destination": "https://transitops-ielj.onrender.com/api/:path*"
-    },
-    {
-      "source": "/((?!assets/|favicon.ico|manifest.json|sw.js).*)",
-      "destination": "/index.html"
     }
   ]
 }
