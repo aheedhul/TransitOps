@@ -29,16 +29,13 @@ export class AuthService {
       throw new AuthError('ACCOUNT_INACTIVE', 'Account is not active');
     }
 
-    const requiresMfa = user.role === 'admin' || !!user.mfaSecret;
+    const requiresMfa = !!user.mfaSecret;
 
     if (requiresMfa) {
-      if (!user.mfaSecret) {
-        throw new AuthError('MFA_SETUP_REQUIRED', 'MFA must be set up before login');
-      }
       if (!input.mfaCode) {
         throw new AuthError('MFA_REQUIRED', 'MFA code is required');
       }
-      const totpValid = verifyTotp(user.mfaSecret, input.mfaCode);
+      const totpValid = verifyTotp(user.mfaSecret!, input.mfaCode);
       if (!totpValid) {
         throw new AuthError('INVALID_MFA', 'Invalid MFA code');
       }
