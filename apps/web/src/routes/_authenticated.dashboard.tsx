@@ -106,11 +106,11 @@ function DashboardPage() {
         description="Live overview of your fleet, trips, drivers, and operational costs."
         actions={
           <>
-            <Button variant="outline" leftIcon={<BarChart3 className="h-3.5 w-3.5" />}>
-              <Link to="/reports">View reports</Link>
+            <Button variant="outline" leftIcon={<BarChart3 className="h-3.5 w-3.5" />} to="/reports">
+              View reports
             </Button>
-            <Button leftIcon={<Plus className="h-3.5 w-3.5" />}>
-              <Link to="/trips/new">New Trip</Link>
+            <Button leftIcon={<Plus className="h-3.5 w-3.5" />} to="/trips/new">
+              New Trip
             </Button>
           </>
         }

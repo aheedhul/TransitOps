@@ -77,11 +77,9 @@ export function TripList() {
         title={t('trips.title')}
         description={`${trips.length} trips tracked. Plan, dispatch, and complete trips with full visibility.`}
         actions={
-          <Link to="/trips/new">
-            <Button leftIcon={<Plus className="h-3.5 w-3.5" />}>
-              {t('trips.newTrip')}
-            </Button>
-          </Link>
+          <Button leftIcon={<Plus className="h-3.5 w-3.5" />} to="/trips/new">
+            {t('trips.newTrip')}
+          </Button>
         }
       />
 
@@ -129,11 +127,9 @@ export function TripList() {
           title="No trips yet"
           description="Create your first trip to get started with fleet operations."
           action={
-            <Link to="/trips/new">
-              <Button leftIcon={<Plus className="h-3.5 w-3.5" />}>
-                {t('trips.newTrip')}
-              </Button>
-            </Link>
+            <Button leftIcon={<Plus className="h-3.5 w-3.5" />} to="/trips/new">
+              {t('trips.newTrip')}
+            </Button>
           }
         />
       ) : (

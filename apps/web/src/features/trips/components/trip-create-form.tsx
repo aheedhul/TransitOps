@@ -314,8 +314,8 @@ export function TripCreateForm() {
         </Section>
 
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline">
-            <Link to="/trips">Cancel</Link>
+          <Button variant="outline" to="/trips">
+            Cancel
           </Button>
           <Button type="submit" loading={submitting} disabled={!canSubmit} leftIcon={<Save className="h-3.5 w-3.5" />}>
             {submitting ? t('tripForm.creating') : t('tripForm.create')}
