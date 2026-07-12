@@ -6,6 +6,9 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { logger } from './lib/logger.js';
 import { env } from './lib/env.js';
+import { db } from './db/index.js';
+import { healthz } from './db/schema.js';
+import { Redis } from 'ioredis';
 import authRoutes from './modules/auth/routes.js';
 import vehicleRoutes from './modules/vehicles/routes.js';
 import driverRoutes from './modules/drivers/routes.js';
@@ -20,6 +23,13 @@ import syncRoutes from './modules/sync/routes.js';
 import reportsRoutes from './modules/reports/routes.js';
 import telematicsRoutes from './modules/telematics/routes.js';
 import geofenceRoutes from './modules/geofences/routes.js';
+
+let redis: Redis | null = null;
+try {
+  redis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 1, lazyConnect: true });
+} catch {
+  // Redis is optional for development
+}
 
 export function createServer(): Express {
   const app = express();
@@ -50,8 +60,33 @@ export function createServer(): Express {
     res.json({ status: 'ok' });
   });
 
-  app.get('/readyz', (_req, res) => {
-    res.json({ status: 'ok', uptime: process.uptime() });
+  app.get('/readyz', async (_req, res) => {
+    const checks: Record<string, string> = {};
+
+    try {
+      await db.select().from(healthz).limit(1);
+      checks.database = 'ok';
+    } catch {
+      checks.database = 'unreachable';
+    }
+
+    try {
+      if (redis) {
+        await redis.ping();
+        checks.redis = 'ok';
+      } else {
+        checks.redis = 'skipped';
+      }
+    } catch {
+      checks.redis = 'unreachable';
+    }
+
+    const allOk = Object.values(checks).every((v) => v === 'ok' || v === 'skipped');
+    res.status(allOk ? 200 : 503).json({
+      status: allOk ? 'ok' : 'degraded',
+      uptime: process.uptime(),
+      checks,
+    });
   });
 
   app.use('/api/v1', authRoutes);

@@ -1,7 +1,21 @@
 import { Router, type Router as RouterType, type Request } from 'express';
+import rateLimit from 'express-rate-limit';
 import { AuthService, AuthError } from './service.js';
-import { loginSchema, refreshSchema, logoutSchema } from './dto.js';
+import { loginSchema, refreshSchema, logoutSchema, verifyMfaSchema } from './dto.js';
 import { requireAuth } from '../../middleware/auth.js';
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: 'RATE_LIMITED',
+      message: 'Too many login attempts. Please try again after 15 minutes.',
+    },
+  },
+});
 
 const router: RouterType = Router();
 const authService = new AuthService();
@@ -19,7 +33,7 @@ function getUserAgent(req: Request): string | undefined {
   return undefined;
 }
 
-router.post('/auth/login', async (req, res) => {
+router.post('/auth/login', loginLimiter, async (req, res) => {
   try {
     const input = loginSchema.parse(req.body);
     const ip = getClientIp(req);
@@ -147,6 +161,39 @@ router.get('/auth/me', requireAuth, (req, res) => {
       orgId: actor.orgId,
     },
   });
+});
+
+router.post('/auth/mfa/setup', requireAuth, async (req, res) => {
+  try {
+    const actor = req.actor!;
+    const result = await authService.setupMfa(actor.userId);
+    res.status(201).json({ data: result });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(409).json({
+        error: { code: err.code, message: err.message, trace_id: req.traceId ?? '' },
+      });
+      return;
+    }
+    throw err;
+  }
+});
+
+router.post('/auth/mfa/verify', requireAuth, async (req, res) => {
+  try {
+    const actor = req.actor!;
+    const { code } = verifyMfaSchema.parse(req.body);
+    await authService.verifyMfa(actor.userId, code);
+    res.json({ data: { status: 'verified' } });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(401).json({
+        error: { code: err.code, message: err.message, trace_id: req.traceId ?? '' },
+      });
+      return;
+    }
+    throw err;
+  }
 });
 
 export default router;

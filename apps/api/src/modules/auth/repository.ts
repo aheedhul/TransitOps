@@ -88,4 +88,11 @@ export class AuthRepository {
       .set({ lastLoginAt: new Date() })
       .where(eq(users.id, userId));
   }
+
+  async updateMfaSecret(userId: string, mfaSecret: string, recoveryCodes: string[]) {
+    await this.database
+      .update(users)
+      .set({ mfaSecret, mfaRecoveryCodes: recoveryCodes })
+      .where(eq(users.id, userId));
+  }
 }

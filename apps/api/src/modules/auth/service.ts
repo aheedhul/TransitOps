@@ -4,6 +4,9 @@ import {
   signAccessToken,
   generateRefreshToken,
   hashRefreshToken,
+  verifyTotp,
+  generateMfaSecret,
+  generateRecoveryCodes,
 } from '../../lib/auth/crypto.js';
 import { env } from '../../lib/env.js';
 import type { LoginInput, RefreshInput, AuthTokens, UserSession } from './dto.js';
@@ -24,6 +27,21 @@ export class AuthService {
 
     if (user.status !== 'active') {
       throw new AuthError('ACCOUNT_INACTIVE', 'Account is not active');
+    }
+
+    const requiresMfa = user.role === 'admin' || !!user.mfaSecret;
+
+    if (requiresMfa) {
+      if (!user.mfaSecret) {
+        throw new AuthError('MFA_SETUP_REQUIRED', 'MFA must be set up before login');
+      }
+      if (!input.mfaCode) {
+        throw new AuthError('MFA_REQUIRED', 'MFA code is required');
+      }
+      const totpValid = verifyTotp(user.mfaSecret, input.mfaCode);
+      if (!totpValid) {
+        throw new AuthError('INVALID_MFA', 'Invalid MFA code');
+      }
     }
 
     const accessToken = signAccessToken({
@@ -119,6 +137,40 @@ export class AuthService {
     const existing = await this.repo.findRefreshToken(hash);
     if (existing && !existing.revokedAt) {
       await this.repo.revokeTokenFamily(existing.familyId);
+    }
+  }
+
+  async setupMfa(userId: string): Promise<{ secret: string; otpauthUrl: string; recoveryCodes: string[] }> {
+    const user = await this.repo.findUserById(userId);
+    if (!user) {
+      throw new AuthError('USER_NOT_FOUND', 'User not found');
+    }
+
+    if (user.mfaSecret) {
+      throw new AuthError('MFA_ALREADY_SETUP', 'MFA is already configured');
+    }
+
+    const { secret, otpauthUrl } = generateMfaSecret();
+    const recoveryCodes = generateRecoveryCodes(10);
+
+    await this.repo.updateMfaSecret(userId, secret, recoveryCodes);
+
+    return { secret, otpauthUrl, recoveryCodes };
+  }
+
+  async verifyMfa(userId: string, code: string): Promise<void> {
+    const user = await this.repo.findUserById(userId);
+    if (!user) {
+      throw new AuthError('USER_NOT_FOUND', 'User not found');
+    }
+
+    if (!user.mfaSecret) {
+      throw new AuthError('MFA_NOT_SETUP', 'MFA is not configured');
+    }
+
+    const valid = verifyTotp(user.mfaSecret, code);
+    if (!valid) {
+      throw new AuthError('INVALID_MFA', 'Invalid MFA code');
     }
   }
 }

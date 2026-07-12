@@ -1,6 +1,7 @@
 import * as argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import { randomBytes, createHash } from 'node:crypto';
+import { authenticator } from 'otplib';
 import { env } from '../env.js';
 
 const ARGON2_OPTIONS: argon2.Options = {
@@ -78,4 +79,18 @@ export function generateRecoveryCodes(count = 10): string[] {
       .toString('hex')
       .toUpperCase(),
   );
+}
+
+export function generateMfaSecret(): { secret: string; otpauthUrl: string } {
+  const secret = authenticator.generateSecret();
+  const otpauthUrl = authenticator.keyuri('user', 'TransitOps', secret);
+  return { secret, otpauthUrl };
+}
+
+export function verifyTotp(secret: string, token: string): boolean {
+  try {
+    return authenticator.verify({ secret, token });
+  } catch {
+    return false;
+  }
 }
