@@ -1,8 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import {
+  Plus,
+  Route as RouteIcon,
+  ArrowRight,
+  Trash2,
+  Search,
+  Calendar,
+  Weight,
+} from 'lucide-react';
 import { api } from '../api/client.js';
-import { EmptyTripState } from '../../../components/ui/empty-state.js';
+import { PageHeader, EmptyState } from '../../../components/ui/empty-state.js';
+import { Button } from '../../../components/ui/button.js';
+import { Input, Select } from '../../../components/ui/input.js';
+import { StatusPill, type StatusKind } from '../../../components/ui/status-pill.js';
+import { Card } from '../../../components/ui/card.js';
+import { DataToolbar } from '../../../components/ui/utilities.js';
+import { Spinner } from '../../../components/ui/spinner.js';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableEmpty } from '../../../components/ui/table.js';
 
 interface Trip {
   id: string;
@@ -19,6 +35,8 @@ export function TripList() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     api.get<{ data: Trip[] }>('/trips?page=1')
@@ -42,73 +60,149 @@ export function TripList() {
     }
   };
 
-  const statusColors: Record<string, string> = {
-    draft: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-    dispatched: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    'in-transit': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  };
-
-  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('trips.loading')}</div>;
-  if (error) return <div className="py-8 text-center text-red-500">{t('trips.error')}</div>;
+  const filtered = trips.filter((trip) => {
+    const matchesSearch =
+      trip.sourceLabel.toLowerCase().includes(filter.toLowerCase()) ||
+      trip.destinationLabel.toLowerCase().includes(filter.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || trip.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('trips.title')}</h1>
-        <button
-          onClick={() => navigate({ to: '/trips/new' })}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          {t('trips.newTrip')}
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title={t('trips.title')}
+        description={`${trips.length} trips tracked. Plan, dispatch, and complete trips with full visibility.`}
+        actions={
+          <Button
+            leftIcon={<Plus className="h-3.5 w-3.5" />}
+            onClick={() => navigate({ to: '/trips/new' })}
+          >
+            {t('trips.newTrip')}
+          </Button>
+        }
+      />
 
-      {trips.length === 0 ? (
-        <EmptyTripState onAction={() => navigate({ to: '/trips/new' })} />
+      <DataToolbar
+        search={
+          <Input
+            type="search"
+            placeholder="Search by source or destination..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" />}
+          />
+        }
+        filters={
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-40"
+          >
+            <option value="all">All Statuses</option>
+            <option value="draft">Draft</option>
+            <option value="dispatched">Dispatched</option>
+            <option value="in-transit">In Transit</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </Select>
+        }
+        actions={
+          <span className="text-xs text-muted-foreground">
+            {filtered.length} of {trips.length} trips
+          </span>
+        }
+      />
+
+      {loading ? (
+        <Card className="p-12">
+          <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+            <Spinner />
+            <span>Loading trips…</span>
+          </div>
+        </Card>
+      ) : error ? (
+        <Card className="p-6 text-sm text-destructive">Error: {error}</Card>
+      ) : trips.length === 0 ? (
+        <EmptyState
+          icon={<RouteIcon className="h-5 w-5" />}
+          title="No trips yet"
+          description="Create your first trip to get started with fleet operations."
+          action={
+            <Button
+              leftIcon={<Plus className="h-3.5 w-3.5" />}
+              onClick={() => navigate({ to: '/trips/new' })}
+            >
+              {t('trips.newTrip')}
+            </Button>
+          }
+        />
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-lg border">
-          <table className="min-w-full text-sm">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-4 py-2 text-left">{t('trips.route')}</th>
-                <th className="px-4 py-2 text-left">{t('trips.status')}</th>
-                <th className="px-4 py-2 text-left">{t('trips.cargo')}</th>
-                <th className="px-4 py-2 text-left">{t('trips.planned')}</th>
-                <th className="px-4 py-2 text-left">{t('trips.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trips.map((trip) => (
-                <tr key={trip.id} className="border-t hover:bg-muted/50">
-                  <td className="px-4 py-2">
-                    <Link to="/trips/$id" params={{ id: trip.id }} className="text-primary hover:underline">
-                      {trip.sourceLabel} → {trip.destinationLabel}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[trip.status] ?? ''}`}>
-                      {trip.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">{trip.cargoWeightKg} kg</td>
-                  <td className="px-4 py-2 text-muted-foreground">
-                    {trip.plannedDepartureAt ? new Date(trip.plannedDepartureAt).toLocaleDateString() : '-'}
-                  </td>
-                  <td className="px-4 py-2">
-                    <button
-                      onClick={() => handleDelete(trip.id)}
-                      className="text-xs text-red-600 hover:underline dark:text-red-400"
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Route</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Cargo</TableHead>
+              <TableHead>Planned</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableEmpty>
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  No trips match your filters.
+                </div>
+              </TableEmpty>
+            ) : (
+              filtered.map((trip) => (
+                <TableRow key={trip.id}>
+                  <TableCell>
+                    <Link
+                      to="/trips/$id"
+                      params={{ id: trip.id }}
+                      className="group flex items-center gap-2 font-medium text-foreground hover:text-primary"
                     >
-                      {t('trips.delete')}
+                      <span className="truncate">{trip.sourceLabel}</span>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                      <span className="truncate">{trip.destinationLabel}</span>
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <StatusPill status={trip.status as StatusKind} size="sm" />
+                  </TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1 text-xs">
+                      <Weight className="h-3 w-3 text-muted-foreground" />
+                      {trip.cargoWeightKg.toLocaleString()} kg
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {trip.plannedDepartureAt ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(trip.plannedDepartureAt).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/60">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(trip.id)}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

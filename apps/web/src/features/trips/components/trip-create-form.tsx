@@ -1,7 +1,21 @@
 import { useState, useEffect, useMemo, type SyntheticEvent } from 'react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import {
+  ArrowLeft,
+  MapPin,
+  Package,
+  Calendar,
+  Save,
+  AlertTriangle,
+  Building2,
+} from 'lucide-react';
 import { api, ApiError } from '../api/client.js';
+import { PageHeader } from '../../../components/ui/empty-state.js';
+import { Button } from '../../../components/ui/button.js';
+import { Section } from '../../../components/ui/card.js';
+import { Field, Input, Textarea, Select } from '../../../components/ui/input.js';
+import { Spinner } from '../../../components/ui/spinner.js';
 
 interface VehicleOption {
   id: string;
@@ -121,186 +135,193 @@ export function TripCreateForm() {
   const availableDrivers = drivers.filter((d) => d.status === 'available');
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">{t('tripForm.title')}</h1>
-        <p className="text-sm text-muted-foreground">
-          Select route, cargo, vehicle, and driver. Only available assets are shown.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <Link
+        to="/trips"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to trips
+      </Link>
+      <PageHeader
+        title={t('tripForm.title')}
+        description="Select route, cargo, vehicle, and driver. Only available assets are shown."
+      />
 
       {error && (
-        <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <form onSubmit={(e) => { void handleSubmit(e); }} className="max-w-3xl space-y-6">
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-medium">Route & Cargo</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Input
-              label="Source"
-              value={sourceLabel}
-              onChange={setSourceLabel}
-              placeholder="e.g. Yelahanka Depot"
-              required
-            />
-            <Input
-              label="Destination"
-              value={destinationLabel}
-              onChange={setDestinationLabel}
-              placeholder="e.g. MG Road, Bangalore"
-              required
-            />
-            <Input
-              label="Cargo Weight (kg)"
-              type="number"
-              value={cargoWeightKg}
-              onChange={setCargoWeightKg}
-              placeholder="e.g. 450"
-              required
-            />
-            <Input
-              label="Planned Distance (km)"
-              type="number"
-              value={plannedDistanceKm}
-              onChange={setPlannedDistanceKm}
-              placeholder="e.g. 28"
-            />
-            <div className="sm:col-span-2">
+      <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-4">
+        <Section
+          title="Route & Cargo"
+          description="Define the journey and what you're transporting"
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Source" htmlFor="src" required>
               <Input
-                label="Cargo Description"
-                value={cargoDescription}
-                onChange={setCargoDescription}
-                placeholder="e.g. Electronics, fragile"
+                id="src"
+                value={sourceLabel}
+                onChange={(e) => setSourceLabel(e.target.value)}
+                placeholder="e.g. Yelahanka Depot"
+                required
+                leftIcon={<MapPin className="h-4 w-4" />}
               />
+            </Field>
+            <Field label="Destination" htmlFor="dst" required>
+              <Input
+                id="dst"
+                value={destinationLabel}
+                onChange={(e) => setDestinationLabel(e.target.value)}
+                placeholder="e.g. MG Road, Bangalore"
+                required
+                leftIcon={<MapPin className="h-4 w-4" />}
+              />
+            </Field>
+            <Field label="Cargo Weight (kg)" htmlFor="cw" required>
+              <Input
+                id="cw"
+                type="number"
+                value={cargoWeightKg}
+                onChange={(e) => setCargoWeightKg(e.target.value)}
+                placeholder="e.g. 450"
+                required
+                leftIcon={<Package className="h-4 w-4" />}
+              />
+            </Field>
+            <Field label="Planned Distance (km)" htmlFor="pd">
+              <Input
+                id="pd"
+                type="number"
+                value={plannedDistanceKm}
+                onChange={(e) => setPlannedDistanceKm(e.target.value)}
+                placeholder="e.g. 28"
+              />
+            </Field>
+            <div className="sm:col-span-2">
+              <Field label="Cargo Description" htmlFor="cd">
+                <Textarea
+                  id="cd"
+                  value={cargoDescription}
+                  onChange={(e) => setCargoDescription(e.target.value)}
+                  placeholder="e.g. Electronics, fragile"
+                />
+              </Field>
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium">Planned Departure</label>
-              <input
-                type="datetime-local"
-                value={plannedDepartureAt}
-                onChange={(e) => { setPlannedDepartureAt(e.target.value); }}
-                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <Field label="Planned Departure" htmlFor="pdep">
+                <Input
+                  id="pdep"
+                  type="datetime-local"
+                  value={plannedDepartureAt}
+                  onChange={(e) => { setPlannedDepartureAt(e.target.value); }}
+                  leftIcon={<Calendar className="h-4 w-4" />}
+                />
+              </Field>
             </div>
           </div>
-        </div>
+        </Section>
 
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-medium">Assignment</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium">Vehicle</label>
-              <select
-                value={vehicleId}
-                onChange={(e) => { setVehicleId(e.target.value); }}
-                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                disabled={loadingOptions}
-              >
-                <option value="">{loadingOptions ? 'Loading...' : 'Select available vehicle'}</option>
-                {availableVehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.registrationNumber} — {v.name ?? v.id.slice(0, 8)} (max {v.maxLoadCapacity} kg)
-                  </option>
+        <Section
+          title="Assignment"
+          description="Choose a vehicle and driver. Issues will be flagged here."
+        >
+          {loadingOptions ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Spinner size={14} />
+              Loading available assets…
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <Field label="Vehicle" htmlFor="vh" required>
+                  <Select id="vh" value={vehicleId} onChange={(e) => { setVehicleId(e.target.value); }}>
+                    <option value="">Select a vehicle</option>
+                    {availableVehicles.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.registrationNumber} — {v.name ?? v.id.slice(0, 8)} (max {v.maxLoadCapacity} kg)
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                {selectedVehicle && (
+                  <div className="mt-2 rounded-md border bg-muted/30 p-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Capacity</span>
+                      <span className="font-semibold text-foreground">
+                        {selectedVehicle.maxLoadCapacity} kg
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {overCapacity && (
+                  <div className="mt-2 flex items-start gap-1.5 rounded-md border border-destructive/20 bg-destructive/5 p-2 text-xs text-destructive">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Cargo exceeds capacity by {(cargoNum - maxCapacity).toFixed(1)} kg
+                    </span>
+                  </div>
+                )}
+                {vehicleIssues.map((msg, i) => (
+                  <div
+                    key={i}
+                    className="mt-1 flex items-start gap-1.5 rounded-md border border-destructive/20 bg-destructive/5 p-2 text-xs text-destructive"
+                  >
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>{msg}</span>
+                  </div>
                 ))}
-              </select>
-              {selectedVehicle && (
-                <div className="mt-2 text-xs text-muted-foreground">
-                  Capacity: <span className="font-medium text-foreground">{selectedVehicle.maxLoadCapacity} kg</span>
-                </div>
-              )}
-              {overCapacity && (
-                <div className="mt-2 text-xs text-destructive">
-                  Cargo exceeds capacity by {(cargoNum - maxCapacity).toFixed(1)} kg
-                </div>
-              )}
-              {vehicleIssues.map((msg, i) => (
-                <div key={i} className="mt-1 text-xs text-destructive">
-                  {msg}
-                </div>
-              ))}
-            </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium">Driver</label>
-              <select
-                value={driverId}
-                onChange={(e) => { setDriverId(e.target.value); }}
-                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                disabled={loadingOptions}
-              >
-                <option value="">{loadingOptions ? 'Loading...' : 'Select available driver'}</option>
-                {availableDrivers.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} — license exp {d.licenseExpiryDate}
-                  </option>
+              <div>
+                <Field label="Driver" htmlFor="dr" required>
+                  <Select id="dr" value={driverId} onChange={(e) => { setDriverId(e.target.value); }}>
+                    <option value="">Select a driver</option>
+                    {availableDrivers.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name} — license exp {d.licenseExpiryDate}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                {driverIssues.map((msg, i) => (
+                  <div
+                    key={i}
+                    className="mt-1 flex items-start gap-1.5 rounded-md border border-destructive/20 bg-destructive/5 p-2 text-xs text-destructive"
+                  >
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>{msg}</span>
+                  </div>
                 ))}
-              </select>
-              {driverIssues.map((msg, i) => (
-                <div key={i} className="mt-1 text-xs text-destructive">
-                  {msg}
-                </div>
-              ))}
-            </div>
+              </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium">Customer ID (optional)</label>
-              <input
-                type="text"
-                value={customerId}
-                onChange={(e) => { setCustomerId(e.target.value); }}
-                placeholder="Paste customer UUID"
-                className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <div className="sm:col-span-2">
+                <Field label="Customer ID (optional)" htmlFor="cuid" hint="Paste the customer UUID if this trip is for a specific client">
+                  <Input
+                    id="cuid"
+                    type="text"
+                    value={customerId}
+                    onChange={(e) => { setCustomerId(e.target.value); }}
+                    placeholder="Paste customer UUID"
+                    leftIcon={<Building2 className="h-4 w-4" />}
+                  />
+                </Field>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </Section>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={submitting || !canSubmit}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline">
+            <Link to="/trips">Cancel</Link>
+          </Button>
+          <Button type="submit" loading={submitting} disabled={!canSubmit} leftIcon={<Save className="h-3.5 w-3.5" />}>
             {submitting ? t('tripForm.creating') : t('tripForm.create')}
-          </button>
-          <Link to="/trips" className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent">
-            {t('common.cancel')}
-          </Link>
+          </Button>
         </div>
       </form>
-    </div>
-  );
-}
-
-function Input({
-  label,
-  value,
-  onChange,
-  type = 'text',
-  placeholder,
-  required,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => { onChange(e.target.value); }}
-        placeholder={placeholder}
-        required={required}
-        className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      />
     </div>
   );
 }

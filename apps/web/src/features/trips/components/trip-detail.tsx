@@ -1,9 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Package,
+  Calendar,
+  Truck,
+  User,
+  Building2,
+  MapPin,
+  Send,
+  Play,
+  CheckCircle2,
+  Circle,
+  Hash,
+  type LucideIcon,
+} from 'lucide-react';
 import { api } from '../api/client.js';
 import { DispatchRecommendationCard } from './dispatch-recommendation-card.js';
 import { RuleVisualizationChain } from './rule-visualization-chain.js';
+import { PageHeader } from '../../../components/ui/empty-state.js';
+import { Button } from '../../../components/ui/button.js';
+import { Section } from '../../../components/ui/card.js';
+import { StatusPill, type StatusKind } from '../../../components/ui/status-pill.js';
+import { Spinner } from '../../../components/ui/spinner.js';
+import { cn } from '../../../lib/utils.js';
 
 interface TripDetailData {
   id: string;
@@ -25,6 +47,13 @@ interface TripDetailData {
   cancelReason?: string;
   createdAt: string;
 }
+
+const TIMELINE_STEPS: { key: keyof TripDetailData; label: string; Icon: LucideIcon }[] = [
+  { key: 'createdAt', label: 'Created', Icon: Circle },
+  { key: 'dispatchedAt', label: 'Dispatched', Icon: Send },
+  { key: 'startedAt', label: 'Started', Icon: Play },
+  { key: 'completedAt', label: 'Completed', Icon: CheckCircle2 },
+];
 
 export function TripDetail() {
   const { t } = useTranslation();
@@ -86,153 +115,256 @@ export function TripDetail() {
     }
   };
 
-  if (loading) return <div className="py-8 text-center text-muted-foreground">{t('trips.loading')}</div>;
-  if (!trip) return <div className="py-8 text-center text-red-500">{t('errors.notFound')}</div>;
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+  if (!trip) return <div className="py-8 text-center text-red-500">Trip not found</div>;
 
   const canDispatch = trip.status === 'draft' && trip.vehicleId && trip.driverId;
   const canStart = trip.status === 'dispatched';
   const canComplete = trip.status === 'in-transit';
 
   return (
-    <div>
-      <Link to="/trips" className="text-sm text-muted-foreground hover:text-foreground">
-        &larr; {t('trips.backToList')}
+    <div className="space-y-6">
+      <Link
+        to="/trips"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        {t('trips.backToList')}
       </Link>
 
-      <div className="mt-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{trip.sourceLabel} &rarr; {trip.destinationLabel}</h1>
-          <p className="text-sm text-muted-foreground">Status: {trip.status}</p>
-        </div>
-        <div className="flex gap-2">
-          {canDispatch && (
-            <button
-              onClick={handleDispatch}
-              disabled={dispatching}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {dispatching ? t('trips.dispatching') : t('trips.dispatch')}
-            </button>
-          )}
-          {canStart && (
-            <button
-              onClick={handleStart}
-              disabled={starting}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {starting ? t('trips.starting') : t('trips.startTrip')}
-            </button>
-          )}
-          {canComplete && (
-            <button
-              onClick={handleComplete}
-              disabled={completing}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {completing ? t('trips.completing') : t('trips.completeTrip')}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <div className="rounded-lg border bg-card p-4">
-            <h2 className="text-lg font-semibold">{t('trips.details')}</h2>
-            <dl className="mt-3 space-y-2 text-sm">
-              <div>
-                <dt className="text-muted-foreground">{t('trips.cargo')}</dt>
-                <dd>{trip.cargoWeightKg} kg</dd>
-              </div>
-              {trip.cargoDescription && (
-                <div>
-                  <dt className="text-muted-foreground">{t('tripForm.description')}</dt>
-                  <dd>{trip.cargoDescription}</dd>
-                </div>
-              )}
-              {trip.plannedDepartureAt && (
-                <div>
-                  <dt className="text-muted-foreground">{t('tripForm.plannedDeparture')}</dt>
-                  <dd>{new Date(trip.plannedDepartureAt).toLocaleString()}</dd>
-                </div>
-              )}
-              {trip.plannedDistanceKm && (
-                <div>
-                  <dt className="text-muted-foreground">{t('trips.planned')}</dt>
-                  <dd>{trip.plannedDistanceKm} km</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
-          <div className="rounded-lg border bg-card p-4">
-            <h2 className="text-lg font-semibold">{t('trips.timeline')}</h2>
-            <dl className="mt-3 space-y-2 text-sm">
-              <div>
-                <dt className="text-muted-foreground">{t('trips.created')}</dt>
-                <dd>{new Date(trip.createdAt).toLocaleString()}</dd>
-              </div>
-              {trip.dispatchedAt && (
-                <div>
-                  <dt className="text-muted-foreground">{t('trips.dispatched')}</dt>
-                  <dd>{new Date(trip.dispatchedAt).toLocaleString()}</dd>
-                </div>
-              )}
-              {trip.startedAt && (
-                <div>
-                  <dt className="text-muted-foreground">{t('trips.started')}</dt>
-                  <dd>{new Date(trip.startedAt).toLocaleString()}</dd>
-                </div>
-              )}
-              {trip.completedAt && (
-                <div>
-                  <dt className="text-muted-foreground">{t('trips.completed')}</dt>
-                  <dd>{new Date(trip.completedAt).toLocaleString()}</dd>
-                </div>
-              )}
-              {trip.cancelledAt && (
-                <div>
-                  <dt className="text-muted-foreground">{t('trips.cancelled')}</dt>
-                  <dd>{new Date(trip.cancelledAt).toLocaleString()}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
-          <div className="rounded-lg border bg-card p-4">
-            <h2 className="text-lg font-semibold">{t('trips.resources')}</h2>
-            <dl className="mt-3 space-y-2 text-sm">
-              <div>
-                <dt className="text-muted-foreground">{t('trips.vehicle')}</dt>
-                <dd>{trip.vehicleId ?? t('common.notAssigned')}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t('trips.driver')}</dt>
-                <dd>{trip.driverId ?? t('common.notAssigned')}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t('trips.customer')}</dt>
-                <dd>{trip.customerId ?? '—'}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="rounded-lg border bg-card p-4">
-            <h2 className="text-lg font-semibold">{t('trips.dispatchRules')}</h2>
-            {trip.vehicleId && trip.driverId ? (
-              <div className="mt-3">
-                <DispatchRecommendationCard tripId={trip.id} />
-                <div className="mt-4">
-                  <RuleVisualizationChain tripStatus={trip.status} vehicleId={trip.vehicleId} driverId={trip.driverId} />
-                </div>
-              </div>
-            ) : (
-              <p className="mt-3 text-sm text-muted-foreground">{t('trips.needResources')}</p>
+      <PageHeader
+        eyebrow={
+          <span className="inline-flex items-center gap-1.5">
+            <Hash className="h-3 w-3" />
+            {trip.id.slice(0, 8)}
+          </span>
+        }
+        title={
+          <span className="flex items-center gap-2">
+            {trip.sourceLabel}
+            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+            {trip.destinationLabel}
+          </span>
+        }
+        description={`Cargo: ${trip.cargoWeightKg.toLocaleString()} kg${
+          trip.plannedDistanceKm ? ` · Distance: ${trip.plannedDistanceKm} km` : ''
+        }`}
+        actions={
+          <div className="flex items-center gap-2">
+            <StatusPill status={trip.status as StatusKind} size="md" />
+            {canDispatch && (
+              <Button
+                onClick={handleDispatch}
+                loading={dispatching}
+                leftIcon={<Send className="h-3.5 w-3.5" />}
+              >
+                {t('trips.dispatch')}
+              </Button>
+            )}
+            {canStart && (
+              <Button
+                onClick={handleStart}
+                loading={starting}
+                variant="success"
+                leftIcon={<Play className="h-3.5 w-3.5" />}
+              >
+                {t('trips.startTrip')}
+              </Button>
+            )}
+            {canComplete && (
+              <Button
+                onClick={handleComplete}
+                loading={completing}
+                variant="success"
+                leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
+              >
+                {t('trips.completeTrip')}
+              </Button>
             )}
           </div>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <Section title="Timeline" description="Trip progression">
+            <ol className="relative space-y-4 pl-6">
+              {TIMELINE_STEPS.map((step, idx) => {
+                const ts = trip[step.key] as string | undefined;
+                const hasValue = !!ts;
+                const isLast = idx === TIMELINE_STEPS.length - 1;
+                return (
+                  <li key={step.key} className="relative">
+                    {!isLast && (
+                      <span
+                        className={cn(
+                          'absolute left-[-19px] top-7 h-full w-px',
+                          hasValue ? 'bg-primary' : 'bg-border',
+                        )}
+                      />
+                    )}
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={cn(
+                          'absolute -left-6 flex h-5 w-5 items-center justify-center rounded-full ring-4 ring-background',
+                          hasValue
+                            ? 'bg-primary text-primary-foreground'
+                            : 'border-2 border-border bg-background text-muted-foreground',
+                        )}
+                      >
+                        <step.Icon className="h-2.5 w-2.5" />
+                      </span>
+                      <div className="flex-1">
+                        <p
+                          className={cn(
+                            'text-sm font-semibold',
+                            hasValue ? 'text-foreground' : 'text-muted-foreground',
+                          )}
+                        >
+                          {step.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {hasValue
+                            ? new Date(ts!).toLocaleString()
+                            : 'Pending'}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+              {trip.cancelledAt && (
+                <li className="relative">
+                  <span className="absolute -left-6 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground ring-4 ring-background">
+                    <Circle className="h-2.5 w-2.5" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-destructive">Cancelled</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(trip.cancelledAt).toLocaleString()}
+                      {trip.cancelReason && ` · ${trip.cancelReason}`}
+                    </p>
+                  </div>
+                </li>
+              )}
+            </ol>
+          </Section>
+
+          <Section title="Details" description="Cargo and journey info">
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DetailItem
+                label="Cargo"
+                value={`${trip.cargoWeightKg.toLocaleString()} kg`}
+                icon={Package}
+              />
+              {trip.cargoDescription && (
+                <DetailItem
+                  label="Description"
+                  value={trip.cargoDescription}
+                  icon={Package}
+                />
+              )}
+              {trip.plannedDistanceKm && (
+                <DetailItem
+                  label="Planned Distance"
+                  value={`${trip.plannedDistanceKm} km`}
+                  icon={MapPin}
+                />
+              )}
+              {trip.plannedDepartureAt && (
+                <DetailItem
+                  label="Planned Departure"
+                  value={new Date(trip.plannedDepartureAt).toLocaleString()}
+                  icon={Calendar}
+                />
+              )}
+            </dl>
+          </Section>
+
+          <Section title="Resources" description="Assigned vehicle, driver, and customer">
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <DetailItem
+                label="Vehicle"
+                value={trip.vehicleId ?? 'Not assigned'}
+                icon={Truck}
+                monoValue
+              />
+              <DetailItem
+                label="Driver"
+                value={trip.driverId ?? 'Not assigned'}
+                icon={User}
+                monoValue
+              />
+              <DetailItem
+                label="Customer"
+                value={trip.customerId ?? '—'}
+                icon={Building2}
+                monoValue
+              />
+            </dl>
+          </Section>
         </div>
+
+        <div className="space-y-4">
+          <Section title="Dispatch Rules" description="Eligibility check">
+            {trip.vehicleId && trip.driverId ? (
+              <>
+                <DispatchRecommendationCard tripId={trip.id} />
+                <div className="mt-4">
+                  <RuleVisualizationChain
+                    tripStatus={trip.status}
+                    vehicleId={trip.vehicleId}
+                    driverId={trip.driverId}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="rounded-md border border-dashed bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+                <Truck className="mx-auto mb-1.5 h-5 w-5" />
+                {t('trips.needResources')}
+              </div>
+            )}
+          </Section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailItem({
+  label,
+  value,
+  icon: Icon,
+  monoValue,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  monoValue?: boolean;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-md border bg-background p-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p
+          className={cn(
+            'truncate text-sm font-semibold text-foreground',
+            monoValue && 'font-mono text-xs',
+          )}
+        >
+          {value}
+        </p>
       </div>
     </div>
   );
