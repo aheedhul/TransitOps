@@ -233,7 +233,6 @@ router.get('/reports/utilization', requireAuth, requireCapability('reports.read'
       .from(vehicles)
       .where(and(eq(vehicles.organizationId, orgId), isNull(vehicles.deletedAt)));
 
-    const periodSeconds = 30 * 24 * 3600;
     const results = [];
 
     for (const v of vehicleList) {
@@ -249,17 +248,13 @@ router.get('/reports/utilization', requireAuth, requireCapability('reports.read'
           ),
         );
 
-      let activeSeconds = 0;
-      for (const t of tripRows) {
-        if (!t.dispatchedAt) continue;
-        const start = new Date(t.dispatchedAt as unknown as string).getTime();
-        const end = t.completedAt
-          ? new Date(t.completedAt as unknown as string).getTime()
-          : Date.now();
-        activeSeconds += Math.max(0, (end - start) / 1000);
-      }
+      const activeDays = new Set(
+        tripRows
+          .filter((t) => t.dispatchedAt)
+          .map((t) => new Date(t.dispatchedAt as unknown as string).toDateString()),
+      ).size;
 
-      const utilPct = Math.min(100, Math.round((activeSeconds / periodSeconds) * 10000) / 100);
+      const utilPct = Math.round((activeDays / 30) * 100);
 
       results.push({
         vehicle_id: v.id,
