@@ -29,7 +29,7 @@ router.get('/customers/:id', requireAuth, requireCapability('customer.read'), as
 router.post('/customers', requireAuth, requireCapability('customer.create'), async (req, res) => {
   try {
     const input = createCustomerSchema.parse(req.body);
-    const customer = await customerService.create(input, getActor(req).orgId);
+    const customer = await customerService.create(input, getActor(req).orgId, getActor(req).userId);
     res.status(201).json({ data: customer });
   } catch (err) {
     nextError(err, req, res);
@@ -39,7 +39,7 @@ router.post('/customers', requireAuth, requireCapability('customer.create'), asy
 router.put('/customers/:id', requireAuth, requireCapability('customer.update'), async (req, res) => {
   try {
     const input = updateCustomerSchema.parse(req.body);
-    const customer = await customerService.update(getParam(req, 'id'), getActor(req).orgId, input);
+    const customer = await customerService.update(getParam(req, 'id'), getActor(req).orgId, input, getActor(req).userId);
     res.json({ data: customer });
   } catch (err) {
     nextError(err, req, res);
@@ -48,7 +48,7 @@ router.put('/customers/:id', requireAuth, requireCapability('customer.update'), 
 
 router.delete('/customers/:id', requireAuth, requireCapability('customer.delete'), async (req, res) => {
   try {
-    await customerService.softDelete(getParam(req, 'id'), getActor(req).orgId);
+    await customerService.softDelete(getParam(req, 'id'), getActor(req).orgId, getActor(req).userId);
     res.status(204).send();
   } catch (err) {
     nextError(err, req, res);

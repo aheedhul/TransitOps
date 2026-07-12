@@ -29,7 +29,7 @@ router.get('/vehicles/:id', requireAuth, requireCapability('vehicle.read'), asyn
 router.post('/vehicles', requireAuth, requireCapability('vehicle.create'), async (req, res) => {
   try {
     const input = createVehicleSchema.parse(req.body);
-    const vehicle = await vehicleService.create(input, getActor(req).orgId);
+    const vehicle = await vehicleService.create(input, getActor(req).orgId, getActor(req).userId);
     res.status(201).json({ data: vehicle });
   } catch (err) {
     nextError(err, req, res);
@@ -39,7 +39,7 @@ router.post('/vehicles', requireAuth, requireCapability('vehicle.create'), async
 router.put('/vehicles/:id', requireAuth, requireCapability('vehicle.update'), async (req, res) => {
   try {
     const input = updateVehicleSchema.parse(req.body);
-    const vehicle = await vehicleService.update(getParam(req, 'id'), getActor(req).orgId, input);
+    const vehicle = await vehicleService.update(getParam(req, 'id'), getActor(req).orgId, input, getActor(req).userId);
     res.json({ data: vehicle });
   } catch (err) {
     nextError(err, req, res);
@@ -48,7 +48,7 @@ router.put('/vehicles/:id', requireAuth, requireCapability('vehicle.update'), as
 
 router.delete('/vehicles/:id', requireAuth, requireCapability('vehicle.delete'), async (req, res) => {
   try {
-    await vehicleService.softDelete(getParam(req, 'id'), getActor(req).orgId);
+    await vehicleService.softDelete(getParam(req, 'id'), getActor(req).orgId, getActor(req).userId);
     res.status(204).send();
   } catch (err) {
     nextError(err, req, res);

@@ -1,5 +1,7 @@
 import { CustomerRepository } from './repository.js';
 import type { CreateCustomerInput, UpdateCustomerInput, CustomerResponse } from './dto.js';
+import { publish, createEvent } from '../../lib/events/bus.js';
+import { TOPICS } from '../../lib/events/topics.js';
 
 export class CustomerService {
   constructor(private readonly repo: CustomerRepository = new CustomerRepository()) {}
@@ -29,7 +31,7 @@ export class CustomerService {
     return serializeCustomer(customer);
   }
 
-  async create(input: CreateCustomerInput, orgId: string) {
+  async create(input: CreateCustomerInput, orgId: string, actorId: string) {
     const existing = await this.repo.findByName(input.name, orgId);
     if (existing) {
       throw new ConflictError('A customer with this name already exists');
@@ -40,10 +42,20 @@ export class CustomerService {
       organizationId: orgId,
     });
 
+    void publish(
+      createEvent(TOPICS.CUSTOMER_CREATED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'customer',
+        entityId: customer.id,
+        payload: { name: customer.name },
+      }),
+    );
+
     return serializeCustomer(customer);
   }
 
-  async update(id: string, orgId: string, input: UpdateCustomerInput) {
+  async update(id: string, orgId: string, input: UpdateCustomerInput, actorId: string) {
     const existing = await this.repo.findById(id, orgId);
     if (!existing) {
       throw new NotFoundError('Customer not found');
@@ -61,14 +73,34 @@ export class CustomerService {
       throw new NotFoundError('Customer not found');
     }
 
+    void publish(
+      createEvent(TOPICS.CUSTOMER_UPDATED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'customer',
+        entityId: customer.id,
+        payload: { name: customer.name },
+      }),
+    );
+
     return serializeCustomer(customer);
   }
 
-  async softDelete(id: string, orgId: string) {
+  async softDelete(id: string, orgId: string, actorId: string) {
     const customer = await this.repo.softDelete(id, orgId);
     if (!customer) {
       throw new NotFoundError('Customer not found');
     }
+
+    void publish(
+      createEvent(TOPICS.CUSTOMER_DELETED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'customer',
+        entityId: id,
+        payload: {},
+      }),
+    );
   }
 }
 

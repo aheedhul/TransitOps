@@ -1,5 +1,7 @@
 import { VehicleRepository } from './repository.js';
 import type { CreateVehicleInput, UpdateVehicleInput, VehicleResponse } from './dto.js';
+import { publish, createEvent } from '../../lib/events/bus.js';
+import { TOPICS } from '../../lib/events/topics.js';
 
 export class VehicleService {
   constructor(private readonly repo: VehicleRepository = new VehicleRepository()) {}
@@ -29,7 +31,7 @@ export class VehicleService {
     return serializeVehicle(vehicle, role);
   }
 
-  async create(input: CreateVehicleInput, orgId: string) {
+  async create(input: CreateVehicleInput, orgId: string, actorId: string) {
     const existing = await this.repo.findByRegistration(input.registrationNumber, orgId);
     if (existing) {
       throw new ConflictError('A vehicle with this registration number already exists');
@@ -40,10 +42,20 @@ export class VehicleService {
       organizationId: orgId,
     });
 
+    void publish(
+      createEvent(TOPICS.VEHICLE_CREATED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'vehicle',
+        entityId: vehicle.id,
+        payload: { registrationNumber: vehicle.registrationNumber },
+      }),
+    );
+
     return serializeVehicle(vehicle);
   }
 
-  async update(id: string, orgId: string, input: UpdateVehicleInput) {
+  async update(id: string, orgId: string, input: UpdateVehicleInput, actorId: string) {
     const existing = await this.repo.findById(id, orgId);
     if (!existing) {
       throw new NotFoundError('Vehicle not found');
@@ -61,14 +73,34 @@ export class VehicleService {
       throw new NotFoundError('Vehicle not found');
     }
 
+    void publish(
+      createEvent(TOPICS.VEHICLE_UPDATED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'vehicle',
+        entityId: vehicle.id,
+        payload: { registrationNumber: vehicle.registrationNumber },
+      }),
+    );
+
     return serializeVehicle(vehicle);
   }
 
-  async softDelete(id: string, orgId: string) {
+  async softDelete(id: string, orgId: string, actorId: string) {
     const vehicle = await this.repo.softDelete(id, orgId);
     if (!vehicle) {
       throw new NotFoundError('Vehicle not found');
     }
+
+    void publish(
+      createEvent(TOPICS.VEHICLE_DELETED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'vehicle',
+        entityId: id,
+        payload: {},
+      }),
+    );
   }
 }
 

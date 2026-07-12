@@ -1,5 +1,7 @@
 import { DriverRepository } from './repository.js';
 import type { CreateDriverInput, UpdateDriverInput, DriverResponse } from './dto.js';
+import { publish, createEvent } from '../../lib/events/bus.js';
+import { TOPICS } from '../../lib/events/topics.js';
 
 const CONTACT_VISIBLE_ROLES = new Set(['admin', 'fleet_manager', 'safety_officer']);
 
@@ -31,7 +33,7 @@ export class DriverService {
     return serializeDriver(driver, userId, role);
   }
 
-  async create(input: CreateDriverInput, orgId: string) {
+  async create(input: CreateDriverInput, orgId: string, actorId: string) {
     const existing = await this.repo.findByLicenseNumber(input.licenseNumber, orgId);
     if (existing) {
       throw new ConflictError('A driver with this license number already exists');
@@ -42,10 +44,20 @@ export class DriverService {
       organizationId: orgId,
     });
 
+    void publish(
+      createEvent(TOPICS.DRIVER_CREATED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'driver',
+        entityId: driver.id,
+        payload: { name: driver.name },
+      }),
+    );
+
     return serializeDriver(driver);
   }
 
-  async update(id: string, orgId: string, input: UpdateDriverInput, role: string) {
+  async update(id: string, orgId: string, input: UpdateDriverInput, role: string, actorId: string) {
     const existing = await this.repo.findById(id, orgId);
     if (!existing) {
       throw new NotFoundError('Driver not found');
@@ -67,14 +79,34 @@ export class DriverService {
       throw new NotFoundError('Driver not found');
     }
 
+    void publish(
+      createEvent(TOPICS.DRIVER_UPDATED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'driver',
+        entityId: driver.id,
+        payload: { name: driver.name },
+      }),
+    );
+
     return serializeDriver(driver);
   }
 
-  async softDelete(id: string, orgId: string) {
+  async softDelete(id: string, orgId: string, actorId: string) {
     const driver = await this.repo.softDelete(id, orgId);
     if (!driver) {
       throw new NotFoundError('Driver not found');
     }
+
+    void publish(
+      createEvent(TOPICS.DRIVER_DELETED, {
+        actorId,
+        organizationId: orgId,
+        entityType: 'driver',
+        entityId: id,
+        payload: {},
+      }),
+    );
   }
 }
 

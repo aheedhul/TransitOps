@@ -1,6 +1,9 @@
 import { createServer } from './app.js';
 import { env } from './lib/env.js';
 import { logger } from './lib/logger.js';
+import { initAuditSubscriber } from './lib/events/subscribers/audit.js';
+
+initAuditSubscriber();
 
 const app = createServer();
 

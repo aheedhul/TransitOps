@@ -34,7 +34,7 @@ router.get('/drivers/:id', requireAuth, requireCapability('driver.read'), async 
 router.post('/drivers', requireAuth, requireCapability('driver.create'), async (req, res) => {
   try {
     const input = createDriverSchema.parse(req.body);
-    const driver = await driverService.create(input, getActor(req).orgId);
+    const driver = await driverService.create(input, getActor(req).orgId, getActor(req).userId);
     res.status(201).json({ data: driver });
   } catch (err) {
     nextError(err, req, res);
@@ -49,6 +49,7 @@ router.put('/drivers/:id', requireAuth, requireCapability('driver.update'), asyn
       getActor(req).orgId,
       input,
       getActor(req).role,
+      getActor(req).userId,
     );
     res.json({ data: driver });
   } catch (err) {
@@ -58,7 +59,7 @@ router.put('/drivers/:id', requireAuth, requireCapability('driver.update'), asyn
 
 router.delete('/drivers/:id', requireAuth, requireCapability('driver.delete'), async (req, res) => {
   try {
-    await driverService.softDelete(getParam(req, 'id'), getActor(req).orgId);
+    await driverService.softDelete(getParam(req, 'id'), getActor(req).orgId, getActor(req).userId);
     res.status(204).send();
   } catch (err) {
     nextError(err, req, res);
