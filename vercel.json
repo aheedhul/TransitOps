@@ -1,8 +1,15 @@
 {
+  "buildCommand": "pnpm run build --filter=@transitops/web",
+  "outputDirectory": "apps/web/dist",
+  "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://transitops-ielj.onrender.com/api/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
