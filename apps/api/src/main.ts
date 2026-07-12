@@ -5,11 +5,15 @@ import { initAuditSubscriber } from './lib/events/subscribers/audit.js';
 import { initFuelAnomalySubscriber } from './lib/events/subscribers/fuel-anomaly.js';
 import { initMaintenanceScheduleSubscriber } from './lib/events/subscribers/maintenance-schedule.js';
 import { initNotificationSubscriber } from './lib/events/subscribers/notifications.js';
+import { initScoringSubscriber } from './lib/events/subscribers/scoring.js';
+import { initEmissionsSubscriber } from './lib/events/subscribers/emissions.js';
 
 initAuditSubscriber();
 initFuelAnomalySubscriber();
 initMaintenanceScheduleSubscriber();
 initNotificationSubscriber();
+initScoringSubscriber();
+initEmissionsSubscriber();
 
 const app = createServer();
 

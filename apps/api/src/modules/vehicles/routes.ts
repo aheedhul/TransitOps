@@ -3,9 +3,32 @@ import { getParam, getActor } from '../../lib/request.js';
 import { VehicleService, NotFoundError, ConflictError } from './service.js';
 import { createVehicleSchema, updateVehicleSchema } from './dto.js';
 import { requireAuth, requireCapability } from '../../middleware/auth.js';
+import { buildCopilotResponse } from './copilot.js';
 
 const router: RouterType = Router();
 const vehicleService = new VehicleService();
+
+router.get('/vehicles/:id/copilot', requireAuth, requireCapability('vehicle.read'), async (req, res) => {
+  try {
+    const useLLM = req.query.llm === 'true';
+    const result = await buildCopilotResponse(
+      getParam(req, 'id'),
+      getActor(req).orgId,
+      useLLM,
+    );
+
+    if (!result) {
+      res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Vehicle not found', trace_id: '' },
+      });
+      return;
+    }
+
+    res.json({ data: result });
+  } catch (err) {
+    throw err;
+  }
+});
 
 router.get('/vehicles', requireAuth, requireCapability('vehicle.read'), async (req, res) => {
   try {

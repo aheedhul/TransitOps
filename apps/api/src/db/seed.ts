@@ -63,6 +63,39 @@ async function seed() {
       ON CONFLICT (id) DO UPDATE SET checked_at = now()
     `;
 
+    // ---- Emissions Factors (IPCC defaults) ----
+    const factors = [
+      { fuel_type: 'diesel', co2_per_l: 2.68, co2_per_kwh: 0, valid_from: '2020-01-01', source: 'IPCC 2006' },
+      { fuel_type: 'petrol', co2_per_l: 2.31, co2_per_kwh: 0, valid_from: '2020-01-01', source: 'IPCC 2006' },
+      { fuel_type: 'cng', co2_per_l: 1.93, co2_per_kwh: 0, valid_from: '2020-01-01', source: 'IPCC 2006' },
+      { fuel_type: 'electric', co2_per_l: 0, co2_per_kwh: 0.7, valid_from: '2020-01-01', source: 'GHG Protocol' },
+      { fuel_type: 'hybrid', co2_per_l: 1.5, co2_per_kwh: 0, valid_from: '2020-01-01', source: 'Fleet Avg Estimate' },
+    ];
+
+    for (const f of factors) {
+      const factorId = uuidv5(`emissions-factor-${f.fuel_type}`, SEED_NAMESPACE);
+      await sql`
+        INSERT INTO emissions_factors (id, fuel_type, co2_per_l, co2_per_kwh, valid_from, source)
+        VALUES (${factorId}, ${f.fuel_type}, ${f.co2_per_l}, ${f.co2_per_kwh}, ${f.valid_from}, ${f.source})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+
+    // ---- Default settings (organization thresholds) ----
+    await sql`
+      INSERT INTO settings (organization_id, payload)
+      VALUES (${ORG_ID}, ${JSON.stringify({
+        maintenance: { oil_change_km_threshold: 5000, tyre_rotation_km_threshold: 10000 },
+        fuel: { anomaly_deviation_pct: 15, rolling_alpha: 0.3, rolling_min_samples: 5 },
+        license: { expire_warn_days: 30 },
+        predictive_eta: { max_delta_min: 10 },
+        scoring: {
+          weights: { fuel_efficiency: 0.25, maintenance: 0.20, driver_safety: 0.25, utilization: 0.30 },
+        },
+      })}::jsonb)
+      ON CONFLICT (organization_id) DO UPDATE SET payload = EXCLUDED.payload
+    `;
+
     logger.info('seed complete');
     logger.info({ admin_email: 'admin@transitops.demo', admin_password: adminPassword }, 'default credentials');
   } finally {

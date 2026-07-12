@@ -45,4 +45,9 @@ export const TOPICS = {
   NOTIFICATION_DELIVERED: 'notification.delivered',
 
   AUDIT_LOG_WRITTEN: 'audit.log.written',
+
+  VEHICLE_SCORE_COMPUTED: 'vehicle.score.computed',
+  DRIVER_SCORE_COMPUTED: 'driver.score.computed',
+  CO2_EMISSION_RECORDED: 'co2.emission.recorded',
+  COPILOT_VIEWED: 'copilot.viewed',
 } as const;

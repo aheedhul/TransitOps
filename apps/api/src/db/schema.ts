@@ -566,3 +566,113 @@ export const syncIdempotency = pgTable(
     index('idx_sync_idempotency_org').on(table.organizationId, table.createdAt.desc()),
   ],
 );
+
+// ============================================================
+// Phase 5 — Scoring & Health
+// ============================================================
+
+export const driverScoreHistory = pgTable(
+  'driver_score_history',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    driverId: uuid('driver_id')
+      .notNull()
+      .references(() => drivers.id),
+    computedAt: timestamp('computed_at', { withTimezone: true }).notNull(),
+    periodStart: date('period_start').notNull(),
+    periodEnd: date('period_end').notNull(),
+    tripsCount: integer('trips_count').notNull().default(0),
+    lateTrips: integer('late_trips').notNull().default(0),
+    safetyScore: numeric('safety_score', { precision: 5, scale: 2 }).notNull(),
+    fuelRating: numeric('fuel_rating', { precision: 5, scale: 2 }).notNull(),
+    overallScore: numeric('overall_score', { precision: 5, scale: 2 }).notNull(),
+    note: text('note'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_driver_score_history_driver').on(table.driverId, table.computedAt.desc()),
+  ],
+);
+
+export const vehicleHealthScores = pgTable(
+  'vehicle_health_scores',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    computedAt: timestamp('computed_at', { withTimezone: true }).notNull(),
+    fuelEfficiencyPct: numeric('fuel_efficiency_pct', { precision: 5, scale: 2 }).notNull(),
+    maintenancePct: numeric('maintenance_pct', { precision: 5, scale: 2 }).notNull(),
+    driverSafetyPct: numeric('driver_safety_pct', { precision: 5, scale: 2 }).notNull(),
+    utilizationPct: numeric('utilization_pct', { precision: 5, scale: 2 }).notNull(),
+    overallScore: numeric('overall_score', { precision: 5, scale: 2 }).notNull(),
+    signals: jsonb('signals').notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_vehicle_health_scores_vehicle').on(table.vehicleId, table.computedAt.desc()),
+    check('chk_vehicle_health_fuel_eff', sql`${table.fuelEfficiencyPct} between 0 and 100`),
+    check('chk_vehicle_health_maint', sql`${table.maintenancePct} between 0 and 100`),
+    check('chk_vehicle_health_driver', sql`${table.driverSafetyPct} between 0 and 100`),
+    check('chk_vehicle_health_util', sql`${table.utilizationPct} between 0 and 100`),
+    check('chk_vehicle_health_overall', sql`${table.overallScore} between 0 and 100`),
+  ],
+);
+
+// ============================================================
+// Phase 5 — Sustainability
+// ============================================================
+
+export const emissionsRecords = pgTable(
+  'emissions_records',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id),
+    vehicleId: uuid('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id),
+    tripId: uuid('trip_id').references(() => trips.id),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+    distanceKm: numeric('distance_km', { precision: 10, scale: 2 }).notNull(),
+    fuelConsumedL: numeric('fuel_consumed_l', { precision: 10, scale: 3 }),
+    electricityKwh: numeric('electricity_kwh', { precision: 10, scale: 3 }),
+    co2Kg: numeric('co2_kg', { precision: 14, scale: 3 }).notNull(),
+    method: text('method').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_emissions_vehicle').on(table.vehicleId, table.periodStart.desc()),
+    index('idx_emissions_trip').on(table.tripId),
+    check('chk_emissions_method', sql`${table.method} in ('ipcc','fleet_actual','estimated')`),
+  ],
+);
+
+export const emissionsFactors = pgTable(
+  'emissions_factors',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    fuelType: text('fuel_type').notNull(),
+    co2PerL: numeric('co2_per_l', { precision: 10, scale: 5 }).notNull(),
+    co2PerKwh: numeric('co2_per_kwh', { precision: 10, scale: 5 }).notNull().default('0'),
+    validFrom: date('valid_from').notNull(),
+    validTo: date('valid_to'),
+    source: text('source').notNull(),
+  },
+);
+
+// ============================================================
+// Phase 5 — Settings
+// ============================================================
+
+export const settings = pgTable(
+  'settings',
+  {
+    organizationId: uuid('organization_id').primaryKey().references(() => organizations.id),
+    payload: jsonb('payload').notNull().default(sql`'{}'::jsonb`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+);
