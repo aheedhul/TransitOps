@@ -7,6 +7,9 @@ import cookieParser from 'cookie-parser';
 import { logger } from './lib/logger.js';
 import { env } from './lib/env.js';
 import authRoutes from './modules/auth/routes.js';
+import vehicleRoutes from './modules/vehicles/routes.js';
+import driverRoutes from './modules/drivers/routes.js';
+import customerRoutes from './modules/customers/routes.js';
 
 export function createServer(): Express {
   const app = express();
@@ -42,6 +45,9 @@ export function createServer(): Express {
   });
 
   app.use('/api/v1', authRoutes);
+  app.use('/api/v1', vehicleRoutes);
+  app.use('/api/v1', driverRoutes);
+  app.use('/api/v1', customerRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({
