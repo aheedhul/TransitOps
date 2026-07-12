@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run build --filter=@transitops/web",
+  "buildCommand": "pnpm --filter=@transitops/web build",
   "outputDirectory": "apps/web/dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
