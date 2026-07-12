@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -31,23 +31,26 @@ interface Trip {
 
 export function TripList() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     api.get<{ data: Trip[] }>('/trips?page=1')
       .then((res) => {
         setTrips(res.data ?? []);
         setLoading(false);
       })
-      .catch((err) => {
-        setError((err as Error).message);
+      .catch(() => {
         setLoading(false);
       });
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -74,12 +77,11 @@ export function TripList() {
         title={t('trips.title')}
         description={`${trips.length} trips tracked. Plan, dispatch, and complete trips with full visibility.`}
         actions={
-          <Button
-            leftIcon={<Plus className="h-3.5 w-3.5" />}
-            onClick={() => navigate({ to: '/trips/new' })}
-          >
-            {t('trips.newTrip')}
-          </Button>
+          <Link to="/trips/new">
+            <Button leftIcon={<Plus className="h-3.5 w-3.5" />}>
+              {t('trips.newTrip')}
+            </Button>
+          </Link>
         }
       />
 
@@ -121,20 +123,17 @@ export function TripList() {
             <span>Loading trips…</span>
           </div>
         </Card>
-      ) : error ? (
-        <Card className="p-6 text-sm text-destructive">Error: {error}</Card>
       ) : trips.length === 0 ? (
         <EmptyState
           icon={<RouteIcon className="h-5 w-5" />}
           title="No trips yet"
           description="Create your first trip to get started with fleet operations."
           action={
-            <Button
-              leftIcon={<Plus className="h-3.5 w-3.5" />}
-              onClick={() => navigate({ to: '/trips/new' })}
-            >
-              {t('trips.newTrip')}
-            </Button>
+            <Link to="/trips/new">
+              <Button leftIcon={<Plus className="h-3.5 w-3.5" />}>
+                {t('trips.newTrip')}
+              </Button>
+            </Link>
           }
         />
       ) : (
